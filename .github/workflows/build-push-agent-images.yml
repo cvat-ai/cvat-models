@@ -1,12 +1,8 @@
 name: Build and Push Agent Images
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'release tag name (e.g., v1.0.0)'
-        required: true
-        type: string
+  repository_dispatch:
+    types: [build-agent-images]
 
 jobs:
   yolo-cpu:
@@ -15,7 +11,7 @@ jobs:
       repo_name: yolo_agent
       dockerfile: detector/yolo/agent/Dockerfile
       platforms: linux/amd64,linux/arm64
-      tag: ${{ github.event.inputs.tag_name }}
+      tag: ${{ github.event.client_payload.tag_name }}
     secrets: inherit
 
   yolo-gpu:
@@ -25,7 +21,7 @@ jobs:
       dockerfile: detector/yolo/agent/Dockerfile
       platforms: linux/amd64
       build_args: USE_GPU=true
-      tag: ${{ github.event.inputs.tag_name }}
+      tag: ${{ github.event.client_payload.tag_name }}
       tag_suffix: _GPU
     secrets: inherit
 
@@ -35,7 +31,7 @@ jobs:
       repo_name: sam2_agent
       dockerfile: tracker/sam2/agent/Dockerfile
       platforms: linux/amd64,linux/arm64
-      tag: ${{ github.event.inputs.tag_name }}
+      tag: ${{ github.event.client_payload.tag_name }}
     secrets: inherit
 
   sam2-gpu:
@@ -45,7 +41,7 @@ jobs:
       dockerfile: tracker/sam2/agent/Dockerfile
       platforms: linux/amd64
       build_args: USE_GPU=true
-      tag: ${{ github.event.inputs.tag_name }}
+      tag: ${{ github.event.client_payload.tag_name }}
       tag_suffix: _GPU
     secrets: inherit
 
@@ -55,7 +51,7 @@ jobs:
       repo_name: transformers_agent
       dockerfile: detector/transformers/agent/Dockerfile
       platforms: linux/amd64,linux/arm64
-      tag: ${{ github.event.inputs.tag_name }}
+      tag: ${{ github.event.client_payload.tag_name }}
     secrets: inherit
 
   transformers-gpu:
@@ -65,6 +61,6 @@ jobs:
       dockerfile: detector/transformers/agent/Dockerfile
       platforms: linux/amd64
       build_args: USE_GPU=true
-      tag: ${{ github.event.inputs.tag_name }}
+      tag: ${{ github.event.client_payload.tag_name }}
       tag_suffix: _GPU
     secrets: inherit
