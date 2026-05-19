@@ -1,0 +1,70 @@
+name: Build and Push Agent Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'release tag name (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  yolo-cpu:
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: yolo_agent
+      dockerfile: detector/yolo/agent/Dockerfile
+      platforms: linux/amd64,linux/arm64
+      tag: ${{ github.event.inputs.tag_name }}
+    secrets: inherit
+
+  yolo-gpu:
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: yolo_agent
+      dockerfile: detector/yolo/agent/Dockerfile
+      platforms: linux/amd64
+      build_args: USE_GPU=true
+      tag: ${{ github.event.inputs.tag_name }}
+      tag_suffix: _GPU
+    secrets: inherit
+
+  sam2-cpu:
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: sam2_agent
+      dockerfile: tracker/sam2/agent/Dockerfile
+      platforms: linux/amd64,linux/arm64
+      tag: ${{ github.event.inputs.tag_name }}
+    secrets: inherit
+
+  sam2-gpu:
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: sam2_agent
+      dockerfile: tracker/sam2/agent/Dockerfile
+      platforms: linux/amd64
+      build_args: USE_GPU=true
+      tag: ${{ github.event.inputs.tag_name }}
+      tag_suffix: _GPU
+    secrets: inherit
+
+  transformers-cpu:
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: transformers_agent
+      dockerfile: detector/transformers/agent/Dockerfile
+      platforms: linux/amd64,linux/arm64
+      tag: ${{ github.event.inputs.tag_name }}
+    secrets: inherit
+
+  transformers-gpu:
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: transformers_agent
+      dockerfile: detector/transformers/agent/Dockerfile
+      platforms: linux/amd64
+      build_args: USE_GPU=true
+      tag: ${{ github.event.inputs.tag_name }}
+      tag_suffix: _GPU
+    secrets: inherit
