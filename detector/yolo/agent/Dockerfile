@@ -28,11 +28,11 @@ RUN if [ "$USE_GPU" = "true" ] && [ "$TARGETARCH" = "amd64" ]; then \
     fi
 
 COPY --chmod=755 detector/yolo/func.py ./
-COPY --chmod=755 detector/yolo/agent/yolo/function_registration.sh .
-COPY --chmod=755 detector/yolo/agent/yolo/function_deregistration.sh .
-COPY --chmod=755 detector/yolo/agent/yolo/check_env.sh .
-COPY --chmod=755 detector/yolo/agent/yolo/entrypoint.sh .
-COPY --chmod=755 detector/yolo/agent/yolo/keypoints.txt .
+COPY --chmod=755 detector/yolo/agent/function_registration.sh .
+COPY --chmod=755 detector/yolo/agent/function_deregistration.sh .
+COPY --chmod=755 detector/yolo/agent/check_env.sh .
+COPY --chmod=755 detector/yolo/agent/entrypoint.sh .
+COPY --chmod=755 detector/yolo/agent/keypoints.txt .
 
 #v1.34.5 fixes CVE-2025-68121
 ADD --chmod=+x https://dl.k8s.io/release/v1.34.6/bin/linux/${TARGETARCH}/kubectl /usr/local/bin/
