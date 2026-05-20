@@ -113,6 +113,12 @@ job:
     requests:
       cpu: 400m
       memory: 256Mi
+  # Number of retries before marking the job as failed. The default value is 3.
+  backoffLimit: 3
+  # Time limit for the job execution. If the job runs longer than this time, it will be terminated.
+  activeDeadlineSeconds: 300
+  # Time to live for the job after it finishes. After this time the job and its pods are automatically deleted.
+  ttlSecondsAfterFinished: 300
   envVars: []
 #   - name: EXAMPLE_ENV_VAR
 #     value: true
