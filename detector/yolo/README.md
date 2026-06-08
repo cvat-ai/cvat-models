@@ -1,7 +1,3 @@
-# Copyright (C) CVAT.ai Corporation
-#
-# SPDX-License-Identifier: AGPL-3.0-or-later
-
 # Ultralytics YOLO
 
 This is an implementation of a CVAT auto-annotation function that uses models from the YOLO

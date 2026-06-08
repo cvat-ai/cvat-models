@@ -1,7 +1,3 @@
-# Copyright (C) CVAT.ai Corporation
-#
-# SPDX-License-Identifier: MIT
-
 # SAM2 tracker
 
 This directory contains an implementation of a CVAT auto-annotation function
