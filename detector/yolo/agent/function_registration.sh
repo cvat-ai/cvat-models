@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # This script registers the YOLO model function in the CVAT.
 
 source "$(dirname "$0")/check_env.sh"

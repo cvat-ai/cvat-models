@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
 validate_access_token() {
     if [ -z "$CVAT_ACCESS_TOKEN" ]; then
         echo "Error: CVAT_ACCESS_TOKEN environment variable must be set."

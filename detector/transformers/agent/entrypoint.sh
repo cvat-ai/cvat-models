@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
 # This script runs transformers model agent in the CVAT.
 
 source "$(dirname "$0")/check_env.sh"

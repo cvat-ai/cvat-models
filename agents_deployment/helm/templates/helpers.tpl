@@ -1,3 +1,7 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
 {{/*
 Fully qualified app name (truncated to 63 chars).
 */}}

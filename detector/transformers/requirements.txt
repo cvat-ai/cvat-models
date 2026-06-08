@@ -1,3 +1,7 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
 cvat-sdk[masks]>=2.44
 scikit-image
 # The torch, timm and scipy dependencies are not required by the function itself;

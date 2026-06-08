@@ -1,3 +1,7 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
 # Hugging Face Transformers
 
 This is an implementation of a CVAT auto-annotation function that uses computer vision models

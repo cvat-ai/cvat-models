@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
 # This script removes the SAM2 model function from the CVAT.
 
 source "$(dirname "$0")/check_env.sh"

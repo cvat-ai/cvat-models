@@ -1,3 +1,7 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
 We expect these models to be working as agents. Other models are not guaranteed.
 
 
@@ -5,27 +9,27 @@ BeitForImageClassification
 BeitForSemanticSegmentation
 BitForImageClassification
 CLIPForImageClassification
-ConditionalDetrForObjectDetection	
+ConditionalDetrForObjectDetection
 ConvNextForImageClassification
 ConvNextV2ForImageClassification
 CvtForImageClassification
 DFineForObjectDetection
-DabDetrForObjectDetection	
+DabDetrForObjectDetection
 Data2VecVisionForImageClassification
 Data2VecVisionForSemanticSegmentation
-DeformableDetrForObjectDetection	
+DeformableDetrForObjectDetection
 DeiTForImageClassification
 DeiTForImageClassificationWithTeacher
-DetrForObjectDetection	
-DetrForSegmentation	
+DetrForObjectDetection
+DetrForSegmentation
 DinatForImageClassification	natten
 Dinov2ForImageClassification
 Dinov2WithRegistersForImageClassification
 DonutSwinForImageClassification
 DPTForSemanticSegmentation
 EfficientNetForImageClassification
-EomtForUniversalSegmentation	
-EomtDinov3ForUniversalSegmentation	
+EomtForUniversalSegmentation
+EomtDinov3ForUniversalSegmentation
 FocalNetForImageClassification
 HGNetV2ForImageClassification
 HieraForImageClassification
@@ -34,8 +38,8 @@ ImageGPTForImageClassification
 LevitForImageClassification
 LevitForImageClassificationWithTeacher
 LwDetrForObjectDetection
-Mask2FormerForUniversalSegmentation	
-MaskFormerForInstanceSegmentation	
+Mask2FormerForUniversalSegmentation
+MaskFormerForInstanceSegmentation
 MetaClip2ForImageClassification
 MobileNetV1ForImageClassification
 MobileNetV2ForImageClassification
@@ -44,7 +48,7 @@ MobileViTForImageClassification
 MobileViTForSemanticSegmentation
 MobileViTV2ForImageClassification
 MobileViTV2ForSemanticSegmentation
-OneFormerForUniversalSegmentation	
+OneFormerForUniversalSegmentation
 PerceiverForImageClassificationLearned
 PerceiverForImageClassificationFourier
 PerceiverForImageClassificationConvProcessing
@@ -65,9 +69,9 @@ Siglip2ForImageClassification
 SwiftFormerForImageClassification
 SwinForImageClassification
 Swinv2ForImageClassification
-TableTransformerForObjectDetection	
+TableTransformerForObjectDetection
 TextNetForImageClassification
-WrapperForImageClassification	
+WrapperForImageClassification
 UperNetForSemanticSegmentation
 ViTForImageClassification
 ViTMSNForImageClassification

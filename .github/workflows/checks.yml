@@ -1,0 +1,17 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
+name: Miscellaneous checks
+on: pull_request
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@v5
