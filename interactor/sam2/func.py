@@ -22,6 +22,13 @@ class _Sam2Detector:
         self._processor = Sam2Processor.from_pretrained(model_id)
         self._model = Sam2Model.from_pretrained(model_id, device_map=device, **kwargs)
 
+        if self._model.device.type == "cuda":
+            torch.set_autocast_enabled(True)
+            torch.set_autocast_gpu_dtype(torch.bfloat16)
+            if torch.cuda.get_device_properties(self._model.device).major >= 8:
+                torch.backends.cuda.matmul.allow_tf32 = True
+                torch.backends.cudnn.allow_tf32 = True
+
     @torch.inference_mode()
     def preprocess_image(
         self, context: cvataa.InteractionFunctionContext, image: PIL.Image.Image
