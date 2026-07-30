@@ -1,0 +1,6 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
+cvat_sdk>=2.71
+transformers[torch,vision]>=5.3.0
