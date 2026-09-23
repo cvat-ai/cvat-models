@@ -9,16 +9,55 @@ on:
     types: [build-agent-images]
 
 jobs:
+  wait-for-python-packages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    outputs:
+      cvat_version: ${{ steps.wait.outputs.cvat_version }}
+    steps:
+      - name: Wait for CVAT Python packages
+        id: wait
+        env:
+          RELEASE_TAG: ${{ github.event.client_payload.tag_name }}
+        run: |
+          set -euo pipefail
+
+          cvat_version="${RELEASE_TAG#v}"
+          if [ -z "$cvat_version" ]; then
+            echo "::error::The release tag is empty"
+            exit 1
+          fi
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --output /dev/null \
+                "https://pypi.org/pypi/cvat-sdk/${cvat_version}/json" && \
+              curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --output /dev/null \
+                "https://pypi.org/pypi/cvat-cli/${cvat_version}/json"; then
+              echo "CVAT SDK and CLI ${cvat_version} are available on PyPI"
+              echo "cvat_version=${cvat_version}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            echo "CVAT SDK and CLI ${cvat_version} are not available yet (attempt ${attempt}/30)"
+            sleep 20
+          done
+
+          echo "::error::CVAT SDK and CLI ${cvat_version} did not become available on PyPI within 10 minutes"
+          exit 1
+
   yolo-cpu:
+    needs: wait-for-python-packages
     uses: ./.github/workflows/build-push-agent-images-reusable.yml
     with:
       repo_name: yolo_agent
       dockerfile: detector/yolo/agent/Dockerfile
       platforms: linux/amd64,linux/arm64
       tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
     secrets: inherit
 
   yolo-gpu:
+    needs: wait-for-python-packages
     uses: ./.github/workflows/build-push-agent-images-reusable.yml
     with:
       repo_name: yolo_agent
@@ -26,19 +65,23 @@ jobs:
       platforms: linux/amd64
       build_args: USE_GPU=true
       tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
       tag_suffix: _GPU
     secrets: inherit
 
   sam2-cpu:
+    needs: wait-for-python-packages
     uses: ./.github/workflows/build-push-agent-images-reusable.yml
     with:
       repo_name: sam2_agent
       dockerfile: tracker/sam2/agent/Dockerfile
       platforms: linux/amd64,linux/arm64
       tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
     secrets: inherit
 
   sam2-gpu:
+    needs: wait-for-python-packages
     uses: ./.github/workflows/build-push-agent-images-reusable.yml
     with:
       repo_name: sam2_agent
@@ -46,19 +89,23 @@ jobs:
       platforms: linux/amd64
       build_args: USE_GPU=true
       tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
       tag_suffix: _GPU
     secrets: inherit
 
   transformers-cpu:
+    needs: wait-for-python-packages
     uses: ./.github/workflows/build-push-agent-images-reusable.yml
     with:
       repo_name: transformers_agent
       dockerfile: detector/transformers/agent/Dockerfile
       platforms: linux/amd64,linux/arm64
       tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
     secrets: inherit
 
   transformers-gpu:
+    needs: wait-for-python-packages
     uses: ./.github/workflows/build-push-agent-images-reusable.yml
     with:
       repo_name: transformers_agent
@@ -66,5 +113,6 @@ jobs:
       platforms: linux/amd64
       build_args: USE_GPU=true
       tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
       tag_suffix: _GPU
     secrets: inherit

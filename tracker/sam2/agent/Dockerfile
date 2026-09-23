@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ARG USE_GPU=false
 ARG TARGETARCH
+ARG CVAT_VERSION
 
 RUN groupadd --gid 1000 agent && \
     useradd --uid 1000 --gid 1000 --create-home agent
@@ -22,11 +23,14 @@ WORKDIR /app
 
 COPY --chmod=755 tracker/sam2/requirements.txt .
 
-RUN if [ "$USE_GPU" = "true" ] && [ "$TARGETARCH" = "amd64" ]; then \
-        echo "Building GPU image" && pip install --no-cache-dir cvat-cli -r requirements.txt; \
+RUN test -n "$CVAT_VERSION" && \
+    if [ "$USE_GPU" = "true" ] && [ "$TARGETARCH" = "amd64" ]; then \
+        echo "Building GPU image" && pip install --no-cache-dir "cvat-cli==$CVAT_VERSION" "cvat-sdk==$CVAT_VERSION" -r requirements.txt; \
     else \
-        echo "Building CPU only image" && pip install --no-cache-dir cvat-cli -r requirements.txt --extra-index-url=https://download.pytorch.org/whl/cpu; \
-    fi
+        echo "Building CPU only image" && pip install --no-cache-dir "cvat-cli==$CVAT_VERSION" "cvat-sdk==$CVAT_VERSION" -r requirements.txt --extra-index-url=https://download.pytorch.org/whl/cpu; \
+    fi && \
+    test "$(python -c 'from importlib.metadata import version; print(version("cvat-sdk"))')" = "$CVAT_VERSION" && \
+    test "$(python -c 'from importlib.metadata import version; print(version("cvat-cli"))')" = "$CVAT_VERSION"
 
 COPY --chmod=755 tracker/sam2/func.py .
 COPY --chmod=755 tracker/sam2/agent/function_registration.sh .
