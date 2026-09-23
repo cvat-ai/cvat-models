@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ARG USE_GPU=false
 ARG TARGETARCH
-ARG CVAT_VERSION
 
 RUN groupadd --gid 1000 agent && \
     useradd --uid 1000 --gid 1000 --create-home agent
@@ -26,12 +25,16 @@ RUN mkdir /shared && chown agent:agent /shared && chown agent:agent /app
 
 COPY --chmod=755 detector/yolo/requirements.txt .
 
-RUN test -n "$CVAT_VERSION" && \
-    if [ "$USE_GPU" = "true" ] && [ "$TARGETARCH" = "amd64" ]; then \
-        echo "Building GPU image" && pip install --no-cache-dir "cvat-cli==$CVAT_VERSION" "cvat-sdk==$CVAT_VERSION" -r requirements.txt; \
+RUN if [ "$USE_GPU" = "true" ] && [ "$TARGETARCH" = "amd64" ]; then \
+        echo "Building GPU image" && pip install --no-cache-dir -r requirements.txt; \
     else \
-        echo "Building CPU only image" && pip install --no-cache-dir "cvat-cli==$CVAT_VERSION" "cvat-sdk==$CVAT_VERSION" -r requirements.txt --extra-index-url=https://download.pytorch.org/whl/cpu; \
-    fi && \
+        echo "Building CPU only image" && pip install --no-cache-dir -r requirements.txt --extra-index-url=https://download.pytorch.org/whl/cpu; \
+    fi
+
+ARG CVAT_VERSION
+
+RUN test -n "$CVAT_VERSION" && \
+    pip install --no-cache-dir "cvat-cli==$CVAT_VERSION" "cvat-sdk==$CVAT_VERSION" && \
     test "$(python -c 'from importlib.metadata import version; print(version("cvat-sdk"))')" = "$CVAT_VERSION" && \
     test "$(python -c 'from importlib.metadata import version; print(version("cvat-cli"))')" = "$CVAT_VERSION"
 
