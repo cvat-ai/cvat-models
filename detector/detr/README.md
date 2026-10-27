@@ -5,7 +5,7 @@ family, as implemented in the Roboflow `rfdetr` library.
 
 The function code is provided under the MIT license. This function supports nondeprecated models
 distributed under the Apache-2.0 license in `rfdetr==1.9.2`.
-RF-DETR Plus and deprecated architectures are not supported, including in local checkpoints.
+RF-DETR Plus and deprecated architectures are not supported.
 
 The AA function supports models solving the following tasks:
 
@@ -15,7 +15,7 @@ The AA function supports models solving the following tasks:
 
 The following pretrained models are supported:
 
-| Task | Model names |
+| Task | Architecture names |
 | --- | --- |
 | Object detection | `RFDETRNano`, `RFDETRSmall`, `RFDETRMedium`, `RFDETRLarge` |
 | Instance segmentation | `RFDETRSegNano`, `RFDETRSegSmall`, `RFDETRSegMedium`, `RFDETRSegLarge`, `RFDETRSegXLarge`, `RFDETRSeg2XLarge` |
@@ -24,23 +24,32 @@ The following pretrained models are supported:
 To use this with CVAT CLI, use the following options:
 
 ```text
---function-file func.py -p model=str:<model>
+--function-file func.py -p architecture=str:<architecture>
 ```
 
-where `<model>` is one of the model names above, such as `RFDETRLarge`, or the path to a local
-checkpoint file. Named models automatically download their pretrained weights.
-For a local checkpoint, RF-DETR must be able to infer its architecture from the checkpoint metadata.
-Custom checkpoints must use a supported architecture and provide unique class names.
+where `<architecture>` is one of the RF-DETR class names above, such as `RFDETRSegSmall`.
+The `architecture` parameter is required. By default, RF-DETR automatically downloads and uses
+that architecture's pretrained weights.
+
+RF-DETR checkpoints do not always contain architecture metadata. Some official Roboflow checkpoints,
+including Large, SegLarge, and KeypointPreview, lack the `args` and `model_name` fields needed for
+automatic architecture detection. Requiring `architecture` makes loading explicit for both pretrained
+and custom checkpoints, even when the file is renamed.
 
 This function also supports the following options:
 
+- `-p model=str:<path>` - optional path to an existing local checkpoint, replacing the default
+  pretrained weights. For example:
+
+  ```text
+  --function-file func.py -p architecture=str:RFDETRSegSmall -p model=str:/path/to/best.pth
+  ```
+
+  The checkpoint must match the selected architecture. Saved training configuration is restored
+  from checkpoint metadata when available. Custom checkpoints must provide unique class names.
+
 - `-p device=str:<device>` - the PyTorch device, such as `cuda` or `cuda:0`, on which to run the model.
   By default, `cpu` is used. GPU inference requires compatible CUDA-enabled PyTorch dependencies.
-
-- `-p pretrain_weights=str:<path>` - path to a local checkpoint for a named model.
-  For example, combine `-p model=str:RFDETRLarge` with `-p pretrain_weights=str:/path/to/checkpoint.pth`.
-  The checkpoint architecture must match the selected model. Use this option for weight files
-  without architecture metadata. It cannot be combined with a checkpoint path in `model`.
 
 - `-p keypoint_names_path=str:<path>` - path to a file with names of keypoints.
   Only valid for pose estimation models.
@@ -60,6 +69,6 @@ Pose models return skeletons and require matching skeleton labels in CVAT.
 The confidence threshold defaults to `0.5` when none is supplied by CVAT;
 keypoints with confidence below `0.5` are marked outside.
 
-Use the same model parameters when registering the function and starting the agent.
+Use the same architecture, optional checkpoint, and other parameters when registering the function and starting the agent.
 See the [native-functions guide](https://docs.cvat.ai/docs/annotation/auto-annotation/ai-models/#native-functions)
 for dependency installation, authentication, and registration commands.

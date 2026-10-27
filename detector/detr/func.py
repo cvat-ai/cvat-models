@@ -30,6 +30,7 @@ SUPPORTED_MODELS = (
     "RFDETRSeg2XLarge",
     "RFDETRKeypointPreview",
 )
+
 DEFAULT_KEYPOINT_NAMES = (
     "nose",
     "left_eye",
@@ -251,54 +252,41 @@ FUNCTION_CLASS_BY_TASK = {
 }
 
 
-def _load_model(model: str, *, device: str, pretrain_weights: str | None) -> RFDETR:
+def _load_model(model: str | None, *, architecture: str, device: str) -> RFDETR:
     import rfdetr
 
-    if model in SUPPORTED_MODELS:
-        if pretrain_weights is not None:
-            if not Path(pretrain_weights).is_file():
-                raise ValueError(f"Checkpoint does not exist: {pretrain_weights}")
-            path = str(Path(pretrain_weights).resolve())
-            try:
-                loaded = rfdetr.from_checkpoint(path, device=device)
-            except KeyError as exc:
-                if exc.args != ("args",):
-                    raise
-                # Some published weight files contain only model tensors. Their
-                # architecture is supplied explicitly by the selected class.
-                loaded = getattr(rfdetr, model)(pretrain_weights=path, device=device)
-            if type(loaded).__name__ != model:
-                raise ValueError("Checkpoint architecture does not match the selected model")
-        else:
-            loaded = getattr(rfdetr, model)(device=device)
-    elif Path(model).is_file():
-        if pretrain_weights is not None:
-            raise ValueError("pretrain_weights requires a named model, not a checkpoint path")
-        try:
-            loaded = rfdetr.from_checkpoint(str(Path(model).resolve()), device=device)
-        except KeyError as exc:
-            raise ValueError(
-                "Checkpoint lacks architecture metadata; select a supported model name "
-                "and pass the file as pretrain_weights"
-            ) from exc
-    else:
+    if architecture not in SUPPORTED_MODELS:
         raise ValueError(
-            f"Unsupported RF-DETR model {model!r}. Choose from {', '.join(SUPPORTED_MODELS)} "
-            "or provide an existing checkpoint path"
+            f"Unsupported RF-DETR architecture {architecture!r}. "
+            f"Choose from {', '.join(SUPPORTED_MODELS)}"
         )
-    if type(loaded).__name__ not in SUPPORTED_MODELS:
-        raise ValueError(f"Unsupported RF-DETR checkpoint architecture: {type(loaded).__name__}")
+    if model is None:
+        return getattr(rfdetr, architecture)(device=device)
+    if not Path(model).is_file():
+        raise ValueError(f"Checkpoint does not exist: {model}")
+    path = str(Path(model).resolve())
+    try:
+        # Preserve training configuration from self-describing checkpoints.
+        loaded = rfdetr.from_checkpoint(path, device=device)
+    except KeyError as exc:
+        if exc.args != ("args",):
+            raise
+        # Published checkpoints can lack architecture metadata. The caller
+        # must identify their architecture explicitly.
+        loaded = getattr(rfdetr, architecture)(pretrain_weights=path, device=device)
+    if type(loaded).__name__ != architecture:
+        raise ValueError("Checkpoint architecture does not match the selected architecture")
     return loaded
 
 
 def create(
-    model: str,
+    model: str | None = None,
     *,
+    architecture: str,
     device: str = "cpu",
-    pretrain_weights: str | None = None,
     keypoint_names_path: str | None = None,
 ) -> cvataa.DetectionFunction:
-    loaded = _load_model(model, device=device, pretrain_weights=pretrain_weights)
+    loaded = _load_model(model, architecture=architecture, device=device)
     if loaded.model_config.use_grouppose_keypoints:
         task = "pose"
     elif loaded.model_config.segmentation_head:
