@@ -8,13 +8,13 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import ClassVar
 
+import cv2
 import cvat_sdk.auto_annotation as cvataa
 import cvat_sdk.models as models
 import numpy as np
 from cvat_sdk.masks import encode_mask
 from PIL import Image
 from rfdetr import RFDETR
-from skimage import measure
 
 # Only nondeprecated models distributed under the Apache-2.0 license are supported.
 SUPPORTED_MODELS = (
@@ -57,9 +57,12 @@ class DetrFunction(abc.ABC):
         self._model = model
         names = list(model.class_names) if class_names is None else class_names
         if not names or any(not isinstance(name, str) or not name for name in names):
-            raise ValueError("RF-DETR must provide nonempty class names")
+            raise ValueError("Model must provide nonempty class names")
         if len(set(names)) != len(names):
-            raise ValueError("RF-DETR class names must be unique")
+            raise ValueError("Model class names must be unique")
+
+        # these are function-local IDs, not sparse COCO category IDs.
+        # predictions are mapped to these IDs by class name.
         self._label_ids = {name: i for i, name in enumerate(names)}
         self.spec = cvataa.DetectionFunctionSpec(
             labels=[self._label_spec(name, i) for name, i in self._label_ids.items()]
@@ -82,37 +85,47 @@ class DetrFunctionWithShapes(DetrFunction):
     def detect(
         self, context: cvataa.DetectionFunctionContext, image: Image.Image
     ) -> list[cvataa.DetectionAnnotation]:
-        threshold = 0.5 if context.conf_threshold is None else context.conf_threshold
-        result = self._model.predict(
-            image.convert("RGB"), threshold=threshold, include_source_image=False
-        )
+        kwargs = {}
+        if context.conf_threshold is not None:
+            kwargs["threshold"] = context.conf_threshold
+
+        result = self._model.predict(image.convert("RGB"), include_source_image=False, **kwargs)
+        if len(result):
+            return list(self._annotations_from_results(context, result, image.size))
+
+        return []
+
+    def _iter_detections(self, context, result) -> Iterator[tuple[int, int]]:
+        """Yield detection indices and function-local label IDs for valid predictions."""
         count = len(result)
-        if not count:
-            return []
         names = result.data.get("class_name")
         scores = result.detection_confidence if self.LABEL_TYPE == "skeleton" else result.confidence
-        if names is None or np.shape(names) != (count,) or np.shape(scores) != (count,):
-            raise ValueError("RF-DETR returned inconsistent class names or confidence scores")
+
+        if names is None:
+            raise ValueError("Model did not return class names")
+
+        expected_shape = (count,)
+        if np.shape(names) != expected_shape:
+            raise ValueError("Model returned inconsistent class names")
+        if np.shape(scores) != expected_shape:
+            raise ValueError("Model returned inconsistent confidence scores")
+
         self._validate_result(result, count)
-        shapes = []
         for i, (name, score) in enumerate(zip(names, scores)):
-            if name == "__background__" or not np.isfinite(score) or score < threshold:
+            if name == "__background__" or not np.isfinite(score):
+                continue
+            if context.conf_threshold is not None and score < context.conf_threshold:
                 continue
             if name not in self._label_ids:
-                raise ValueError(f"RF-DETR returned an unknown class name: {name!r}")
-            shapes.extend(
-                self._annotations_from_results(
-                    context, result, i, self._label_ids[name], image.size
-                )
-            )
-        return shapes
+                raise ValueError(f"Model returned an unknown class name: {name!r}")
+            yield i, self._label_ids[name]
 
     @abc.abstractmethod
     def _validate_result(self, result, count: int) -> None: ...
 
     @abc.abstractmethod
     def _annotations_from_results(
-        self, context, result, i, label_id, size
+        self, context, result, size
     ) -> Iterator[cvataa.DetectionAnnotation]: ...
 
 
@@ -121,17 +134,18 @@ class DetrDetectionFunction(DetrFunctionWithSimpleLabel, DetrFunctionWithShapes)
 
     def _validate_result(self, result, count: int) -> None:
         if np.shape(result.xyxy) != (count, 4):
-            raise ValueError("RF-DETR returned inconsistent bounding boxes")
+            raise ValueError("Model returned inconsistent bounding boxes")
 
     def _annotations_from_results(
-        self, context, result, i, label_id, size
+        self, context, result, size
     ) -> Iterator[cvataa.DetectionAnnotation]:
-        box = np.asarray(result.xyxy[i], dtype=float)
-        if not np.isfinite(box).all():
-            return
-        box = np.clip(box, 0, [size[0], size[1], size[0], size[1]])
-        if box[2] > box[0] and box[3] > box[1]:
-            yield cvataa.rectangle(label_id, box.tolist())
+        for i, label_id in self._iter_detections(context, result):
+            box = np.asarray(result.xyxy[i], dtype=float)
+            if not np.isfinite(box).all():
+                continue
+            box = np.clip(box, 0, [size[0], size[1], size[0], size[1]])
+            if box[2] > box[0] and box[3] > box[1]:
+                yield cvataa.rectangle(label_id, box.tolist())
 
 
 class DetrSegmentationFunction(DetrFunctionWithSimpleLabel, DetrFunctionWithShapes):
@@ -139,47 +153,70 @@ class DetrSegmentationFunction(DetrFunctionWithSimpleLabel, DetrFunctionWithShap
 
     def _validate_result(self, result, count: int) -> None:
         if result.mask is None or np.ndim(result.mask) != 3 or len(result.mask) != count:
-            raise ValueError("RF-DETR returned inconsistent instance masks")
+            raise ValueError("Model returned inconsistent instance masks")
 
     def _annotations_from_results(
-        self, context, result, i, label_id, size
+        self, context, result, size
     ) -> Iterator[cvataa.DetectionAnnotation]:
-        mask = np.asarray(result.mask[i], dtype=bool)
-        if mask.shape != (size[1], size[0]):
-            mask = np.asarray(Image.fromarray(mask).resize(size, Image.Resampling.NEAREST))
-        if not mask.any():
-            return
-        if not context.conv_mask_to_poly:
-            yield cvataa.mask(label_id, encode_mask(mask))
-            return
-        # Padding closes contours for instances touching the image boundary.
-        for contour in measure.find_contours(np.pad(mask, 1), level=0.5):
-            ys, xs = contour.T
-            if len(contour) < 3 or np.sum(xs * np.roll(ys, -1)) < np.sum(ys * np.roll(xs, -1)):
-                continue  # Interior holes cannot be represented by CVAT polygons.
-            approx = measure.approximate_polygon(contour, tolerance=2.5)
-            if len(approx) < 4:
-                approx = contour
-            points = np.clip((approx - 1)[:, ::-1], 0, [size[0] - 1, size[1] - 1])
-            if len(np.unique(points, axis=0)) >= 3:
-                yield cvataa.polygon(label_id, points.ravel().tolist())
+        for i, label_id in self._iter_detections(context, result):
+            mask = np.asarray(result.mask[i], dtype=bool)
+            if mask.shape != (size[1], size[0]):
+                mask = np.asarray(Image.fromarray(mask).resize(size, Image.Resampling.NEAREST))
+            if not mask.any():
+                continue
+            if not context.conv_mask_to_poly:
+                yield cvataa.mask(label_id, encode_mask(mask))
+                continue
+
+            # Pad and dilate to handle masks touching image boundaries.
+            expanded = cv2.copyMakeBorder(
+                mask.astype(np.uint8), 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0
+            )
+            expanded = cv2.dilate(
+                expanded,
+                np.ones((2, 2), dtype=np.uint8),
+                anchor=(-1, -1),
+                iterations=1,
+                borderType=cv2.BORDER_CONSTANT,
+            )
+            contours, _ = cv2.findContours(expanded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            contours = sorted(
+                contours, key=lambda contour: cv2.arcLength(contour, closed=False), reverse=True
+            )
+
+            epsilon = 1.0
+            for contour in contours:
+                contour = (contour - 1).astype(np.float32)
+                if len(contour) < 3:
+                    continue
+                approx = cv2.approxPolyDP(contour, epsilon, closed=True)
+                if len(approx) < 3:
+                    approx = contour
+                yield cvataa.polygon(label_id, approx.ravel().tolist())
 
 
 class DetrPoseEstimationFunction(DetrFunctionWithShapes):
     LABEL_TYPE = "skeleton"
 
-    def __init__(self, model: RFDETR, keypoint_names_path: str | None = None) -> None:
+    def __init__(
+        self, model: RFDETR, keypoint_names_path: str | None = None, *, pretrained: bool = False
+    ) -> None:
         counts = list(model.model_config.num_keypoints_per_class)
         # Legacy checkpoints may reserve slot zero for background.
         if counts and counts[0] == 0:
             counts = counts[1:]
-        names = list(model.class_names)
-        # The published preview checkpoint has no class names; the library falls back
-        # to all 80 COCO names even though only the person class has keypoints.
-        if model.model.class_names is None and counts == [17] and names and names[0] == "person":
+
+        if pretrained:
+            # The default KeypointPreview weights use the COCO person schema.
             names = ["person"]
+        else:
+            if not model.model.class_names:
+                raise ValueError("Custom keypoint checkpoint must provide class names")
+            names = list(model.model.class_names)
+
         if len(counts) != len(names) or any(count <= 0 for count in counts):
-            raise ValueError("RF-DETR keypoint schema does not match its classes")
+            raise ValueError("Model keypoint schema does not match its classes")
+
         if keypoint_names_path:
             path = Path(keypoint_names_path)
             if path.suffix.lower() == ".json":
@@ -187,12 +224,14 @@ class DetrPoseEstimationFunction(DetrFunctionWithShapes):
             else:
                 shared = [line.strip() for line in path.read_text().splitlines() if line.strip()]
                 schema = {name: shared for name in names}
-        elif names == ["person"] and counts == [17]:
+        elif pretrained:
             schema = {"person": list(DEFAULT_KEYPOINT_NAMES)}
         else:
             raise ValueError("Custom keypoint models require keypoint_names_path")
+
         if not isinstance(schema, dict) or set(schema) != set(names):
             raise ValueError("Keypoint names must define every model class exactly once")
+
         for name, count in zip(names, counts):
             points = schema[name]
             if (
@@ -201,9 +240,8 @@ class DetrPoseEstimationFunction(DetrFunctionWithShapes):
                 or any(not isinstance(p, str) or not p.strip() for p in points)
                 or len(set(points)) != count
             ):
-                raise ValueError(
-                    f"Invalid keypoint names for {name!r}: expected {count} unique names"
-                )
+                raise ValueError(f"Invalid keypoint names for {name!r}: expected {count} unique names")
+
         self._keypoint_names = schema
         super().__init__(model, class_names=names)
 
@@ -222,27 +260,28 @@ class DetrPoseEstimationFunction(DetrFunctionWithShapes):
             or xy.shape[2] != 2
             or np.shape(result.keypoint_confidence) != xy.shape[:2]
         ):
-            raise ValueError("RF-DETR returned inconsistent keypoint arrays")
+            raise ValueError("Model returned inconsistent keypoint arrays")
         if xy.shape[1] != max(map(len, self._keypoint_names.values())):
-            raise ValueError("RF-DETR keypoint output does not match its schema")
+            raise ValueError("Model keypoint output does not match its schema")
 
     def _annotations_from_results(
-        self, context, result, i, label_id, size
+        self, context, result, size
     ) -> Iterator[cvataa.DetectionAnnotation]:
-        count = len(self._keypoint_names[result.data["class_name"][i]])
-        elements = []
-        for point_id, (point, score) in enumerate(
-            zip(result.xy[i][:count], result.keypoint_confidence[i][:count])
-        ):
-            valid = np.isfinite(point).all() and np.isfinite(score)
-            elements.append(
-                cvataa.keypoint(
-                    point_id,
-                    np.asarray(point).tolist() if valid else [0.0, 0.0],
-                    outside=not valid or float(score) < 0.5,
+        for i, label_id in self._iter_detections(context, result):
+            count = len(self._keypoint_names[result.data["class_name"][i]])
+            elements = []
+            for point_id, (point, score) in enumerate(
+                zip(result.xy[i][:count], result.keypoint_confidence[i][:count])
+            ):
+                valid = np.isfinite(point).all() and np.isfinite(score)
+                elements.append(
+                    cvataa.keypoint(
+                        point_id,
+                        np.asarray(point).tolist() if valid else [0.0, 0.0],
+                        outside=not valid or float(score) < 0.5,
+                    )
                 )
-            )
-        yield cvataa.skeleton(label_id, elements)
+            yield cvataa.skeleton(label_id, elements)
 
 
 FUNCTION_CLASS_BY_TASK = {
@@ -257,7 +296,7 @@ def _load_model(model: str | None, *, architecture: str, device: str) -> RFDETR:
 
     if architecture not in SUPPORTED_MODELS:
         raise ValueError(
-            f"Unsupported RF-DETR architecture {architecture!r}. "
+            f"Unsupported model architecture {architecture!r}. "
             f"Choose from {', '.join(SUPPORTED_MODELS)}"
         )
     if model is None:
@@ -295,8 +334,11 @@ def create(
         task = "detect"
 
     kwargs = {}
+    if task == "pose":
+        kwargs["pretrained"] = model is None and architecture == "RFDETRKeypointPreview"
     if keypoint_names_path is not None:
         if task != "pose":
             raise ValueError("keypoint_names_path is only supported for keypoint models")
         kwargs["keypoint_names_path"] = keypoint_names_path
+
     return FUNCTION_CLASS_BY_TASK[task](loaded, **kwargs)

@@ -54,10 +54,10 @@ This function also supports the following options:
 - `-p keypoint_names_path=str:<path>` - path to a file with names of keypoints.
   Only valid for pose estimation models.
   By default, the pretrained human-pose model uses the 17 COCO keypoint names
-  (`nose`, `left_eye`, `right_eye`, etc.). Custom schemas require this option.
+  (`nose`, `left_eye`, `right_eye`, etc.). Custom keypoint checkpoints require this option
+  and must contain their object class names; the wrapper does not infer a schema from the keypoint count.
 
-  The `<path>` can point to a text file, with one keypoint name per line. Leading and trailing
-  whitespace will be ignored, and so will empty lines. The list applies to every class.
+  The `<path>` can point to a text file with one keypoint name per line, in the model's keypoint order.
 
   For different schemas per class, use a `.json` file mapping every class name to an ordered list
   of keypoint names, for example `{"cat": ["nose", "tail"], "car": ["front", "rear", "top"]}`.
@@ -69,6 +69,7 @@ Pose models return skeletons and require matching skeleton labels in CVAT.
 The confidence threshold defaults to `0.5` when none is supplied by CVAT;
 keypoints with confidence below `0.5` are marked outside.
 
-Use the same architecture, optional checkpoint, and other parameters when registering the function and starting the agent.
+Use the same architecture, optional checkpoint, and other parameters when registering the function
+and starting the agent.
 See the [native-functions guide](https://docs.cvat.ai/docs/annotation/auto-annotation/ai-models/#native-functions)
 for dependency installation, authentication, and registration commands.

@@ -4,4 +4,4 @@
 
 cvat-sdk>=2.44
 rfdetr==1.9.2
-scikit-image
+opencv-python-headless
