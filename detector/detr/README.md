@@ -1,99 +1,65 @@
 # RF-DETR
 
-This CVAT auto-annotation function runs RF-DETR models locally through the CVAT CLI.
-It supports object detection, instance segmentation, and keypoint detection with
-`rfdetr==1.9.2`. The wrapper is MIT-licensed; the supported upstream models are Apache-2.0.
+This is an implementation of a CVAT auto-annotation function that uses models from the RF-DETR
+family, as implemented in the Roboflow `rfdetr` library.
+
+The function code is provided under the MIT license. This function supports nondeprecated models
+distributed under the Apache-2.0 license in `rfdetr==1.9.2`.
 RF-DETR Plus and deprecated architectures are not supported, including in local checkpoints.
 
-## Supported models
+The AA function supports models solving the following tasks:
 
-| Task | `model` values | Output |
-| --- | --- | --- |
-| Detection | `RFDETRNano`, `RFDETRSmall`, `RFDETRMedium`, `RFDETRLarge` | Rectangles |
-| Instance segmentation | `RFDETRSegNano`, `RFDETRSegSmall`, `RFDETRSegMedium`, `RFDETRSegLarge`, `RFDETRSegXLarge`, `RFDETRSeg2XLarge` | Masks or polygons |
-| Keypoint detection | `RFDETRKeypointPreview` | Skeletons |
+- object detection
+- instance segmentation
+- pose estimation
 
-KeypointPreview is a preview model. Deprecated `RFDETRBase`, `RFDETRLargeDeprecated`, and
-`RFDETRSegPreview` are excluded. This function uses the RF-DETR library, separately from
-the Hugging Face DETR models supported by `detector/transformers`.
+The following pretrained models are supported:
 
-## Run with CVAT CLI
+| Task | Model names |
+| --- | --- |
+| Object detection | `RFDETRNano`, `RFDETRSmall`, `RFDETRMedium`, `RFDETRLarge` |
+| Instance segmentation | `RFDETRSegNano`, `RFDETRSegSmall`, `RFDETRSegMedium`, `RFDETRSegLarge`, `RFDETRSegXLarge`, `RFDETRSeg2XLarge` |
+| Pose estimation | `RFDETRKeypointPreview` (preview model) |
 
-From the repository root, in a Python environment supported by RF-DETR (Python 3.12 is recommended):
+To use this with CVAT CLI, use the following options:
 
-```bash
-python -m pip install cvat-cli -r detector/detr/requirements.txt
-export CVAT_SERVER_URL="https://app.cvat.ai"
-export CVAT_ACCESS_TOKEN="replace-with-your-token"
-export CVAT_ORG=""  # Or your organization slug.
-
-cvat-cli --server-host "$CVAT_SERVER_URL" --org "$CVAT_ORG" function create-native "RF-DETR" \
-  --function-file detector/detr/func.py \
-  -p model=str:RFDETRLarge -p device=str:cpu
-
-cvat-cli --server-host "$CVAT_SERVER_URL" --org "$CVAT_ORG" function run-agent <function_id> \
-  --function-file detector/detr/func.py \
-  -p model=str:RFDETRLarge -p device=str:cpu
+```text
+--function-file func.py -p model=str:<model>
 ```
 
-Replace `<function_id>` with the registered function's numeric ID. Keep the agent running.
-In CVAT, select **AI assistance → Auto-labeling → Model → RF-DETR**, map its labels to your task,
-and run it. Task automatic annotation is also supported. Pose models require matching skeleton labels.
+where `<model>` is one of the model names above, such as `RFDETRLarge`, or the path to a local
+checkpoint file. Named models automatically download their pretrained weights.
+For a local checkpoint, RF-DETR must be able to infer its architecture from the checkpoint metadata.
+Custom checkpoints must use a supported architecture and provide unique class names.
 
-Use identical model parameters and workspace settings for registration and execution. Register
-different models under distinct function names. For segmentation, substitute `RFDETRSegLarge`;
-for human poses, substitute `RFDETRKeypointPreview`. Segmentation returns masks unless the request
-enables mask-to-polygon conversion. Polygon conversion emits exterior contours and omits holes.
+This function also supports the following options:
 
-For GPU inference, install CUDA-compatible PyTorch dependencies and replace `device=str:cpu`
-with `device=str:cuda` or `device=str:cuda:0` in both commands. CPU is the default device.
-The CVAT confidence threshold is forwarded to RF-DETR; when absent it defaults to `0.5`.
-Keypoints below confidence `0.5` are marked outside.
+- `-p device=str:<device>` - the PyTorch device, such as `cuda` or `cuda:0`, on which to run the model.
+  By default, `cpu` is used. GPU inference requires compatible CUDA-enabled PyTorch dependencies.
 
-Pretrained weights download automatically and use RF-DETR's cache, normally `~/.roboflow/models`.
-Set `RF_HOME` to change that directory. No hosted inference service or Roboflow API token is required.
+- `-p pretrain_weights=str:<path>` - path to a local checkpoint for a named model.
+  For example, combine `-p model=str:RFDETRLarge` with `-p pretrain_weights=str:/path/to/checkpoint.pth`.
+  The checkpoint architecture must match the selected model. Use this option for weight files
+  without architecture metadata. It cannot be combined with a checkpoint path in `model`.
 
-## Local checkpoints
+- `-p keypoint_names_path=str:<path>` - path to a file with names of keypoints.
+  Only valid for pose estimation models.
+  By default, the pretrained human-pose model uses the 17 COCO keypoint names
+  (`nose`, `left_eye`, `right_eye`, etc.). Custom schemas require this option.
 
-Use a checkpoint whose architecture and class metadata can be inferred by RF-DETR:
+  The `<path>` can point to a text file, with one keypoint name per line. Leading and trailing
+  whitespace will be ignored, and so will empty lines. The list applies to every class.
 
-```bash
---function-file detector/detr/func.py -p model=str:/absolute/path/to/checkpoint.pth -p device=str:cpu
-```
+  For different schemas per class, use a `.json` file mapping every class name to an ordered list
+  of keypoint names, for example `{"cat": ["nose", "tail"], "car": ["front", "rear", "top"]}`.
+  Names must be nonempty and unique within each class, and counts must match the checkpoint.
+  Classes without keypoints in a mixed detection/keypoint checkpoint are not supported.
 
-Alternatively, explicitly select its architecture:
+Segmentation models return masks, or polygons when mask-to-polygon conversion is requested.
+Pose models return skeletons and require matching skeleton labels in CVAT.
+The confidence threshold defaults to `0.5` when none is supplied by CVAT;
+keypoints with confidence below `0.5` are marked outside.
 
-```bash
---function-file detector/detr/func.py \
-  -p model=str:RFDETRLarge -p pretrain_weights=str:/absolute/path/to/checkpoint.pth
-```
-
-The architecture in the checkpoint must match the selected model. For published weight files
-without architecture metadata, use an explicit model name with `pretrain_weights`.
-`pretrain_weights` accepts an
-existing local file and cannot be combined with a checkpoint path in `model`. The upstream safe
-checkpoint loader is used; unrestricted pickle loading is not enabled. Class names must be unique
-and present in the model metadata. Custom checkpoints must use one of the supported architectures.
-
-## Custom keypoint names
-
-The pretrained human-pose model uses the 17 COCO keypoints, in the same order as YOLO.
-For custom schemas, supply `-p keypoint_names_path=str:/absolute/path/to/names.txt` in both CLI commands.
-A text file contains one name per line; blank lines and surrounding whitespace are ignored.
-The list applies to every class, so each class must have the same keypoint count.
-
-For different schemas per class, use a `.json` file mapping every class name to an ordered list:
-
-```json
-{
-  "cat": ["nose", "tail"],
-  "car": ["front_left", "front_right", "rear_left", "rear_right"]
-}
-```
-
-Names must be nonempty and unique within each class, and counts must match the checkpoint.
-This parameter is only valid for keypoint models. Classes without keypoints in a mixed
-detection/keypoint checkpoint are not supported.
-
-See the [CVAT native-functions guide](https://docs.cvat.ai/docs/annotation/auto-annotation/ai-models/#native-functions)
-for authentication, workspace scopes, and registration details.
+Use the same model parameters when registering the function and starting the agent.
+See the [native-functions guide](https://docs.cvat.ai/docs/annotation/auto-annotation/ai-models/#native-functions)
+for dependency installation, authentication, and registration commands.
