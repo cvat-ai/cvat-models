@@ -61,8 +61,10 @@ Detection models return bounding boxes.
 Segmentation models return masks, or polygons when mask-to-polygon conversion is requested.
 Keypoint detection models return skeletons and require matching skeleton labels in CVAT.
 
-When no confidence threshold is supplied by CVAT, RF-DETR uses its default.
-keypoints with confidence below threshold specified thre are marked outside.
+The confidence threshold supplied by CVAT applies to both detections and individual keypoints.
+Keypoints with confidence below the supplied threshold are marked outside.
+When no threshold is supplied, RF-DETR uses its default for detections,
+and keypoints are not filtered by confidence.
 
 Use the same architecture, optional checkpoint, and other parameters when registering the function
 and starting the agent.

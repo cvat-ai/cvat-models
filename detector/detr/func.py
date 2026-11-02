@@ -88,7 +88,6 @@ class DetrFunctionWithShapes(DetrFunction):
         kwargs = {}
         if context.conf_threshold is not None:
             kwargs["threshold"] = context.conf_threshold
-
         result = self._model.predict(image.convert("RGB"), include_source_image=False, **kwargs)
         if len(result):
             return list(self._annotations_from_results(context, result, image.size))
@@ -267,6 +266,7 @@ class DetrPoseEstimationFunction(DetrFunctionWithShapes):
     def _annotations_from_results(
         self, context, result, size
     ) -> Iterator[cvataa.DetectionAnnotation]:
+        threshold = context.conf_threshold
         for i, label_id in self._iter_detections(context, result):
             count = len(self._keypoint_names[result.data["class_name"][i]])
             elements = []
@@ -278,7 +278,7 @@ class DetrPoseEstimationFunction(DetrFunctionWithShapes):
                     cvataa.keypoint(
                         point_id,
                         np.asarray(point).tolist() if valid else [0.0, 0.0],
-                        outside=not valid or float(score) < 0.5,
+                        outside=not valid or (threshold is not None and float(score) < threshold),
                     )
                 )
             yield cvataa.skeleton(label_id, elements)
