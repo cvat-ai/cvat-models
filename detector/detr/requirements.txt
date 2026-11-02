@@ -3,5 +3,5 @@
 # SPDX-License-Identifier: MIT
 
 cvat-sdk>=2.44
-rfdetr==1.9.2
+rfdetr
 opencv-python-headless

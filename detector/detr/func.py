@@ -295,10 +295,14 @@ def _load_model(model: str | None, *, architecture: str, device: str) -> RFDETR:
     import rfdetr
 
     if architecture not in SUPPORTED_MODELS:
+        # require arcitecture explicitly as checkpoints can not to contain metadata
+        # necessary for automatic architecture detection
+        # even some official RF checkpoints do not contain them
         raise ValueError(
             f"Unsupported model architecture {architecture!r}. "
             f"Choose from {', '.join(SUPPORTED_MODELS)}"
         )
+
     if model is None:
         return getattr(rfdetr, architecture)(device=device)
     if not Path(model).is_file():

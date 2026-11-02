@@ -4,14 +4,14 @@ This is an implementation of a CVAT auto-annotation function that uses models fr
 family, as implemented in the Roboflow `rfdetr` library.
 
 The function code is provided under the MIT license. This function supports nondeprecated models
-distributed under the Apache-2.0 license in `rfdetr==1.9.2`.
+distributed under the Apache-2.0 license in `rfdetr`.
 RF-DETR Plus and deprecated architectures are not supported.
 
 The AA function supports models solving the following tasks:
 
 - object detection
 - instance segmentation
-- pose estimation
+- keypoint detection
 
 The following pretrained models are supported:
 
@@ -19,7 +19,7 @@ The following pretrained models are supported:
 | --- | --- |
 | Object detection | `RFDETRNano`, `RFDETRSmall`, `RFDETRMedium`, `RFDETRLarge` |
 | Instance segmentation | `RFDETRSegNano`, `RFDETRSegSmall`, `RFDETRSegMedium`, `RFDETRSegLarge`, `RFDETRSegXLarge`, `RFDETRSeg2XLarge` |
-| Pose estimation | `RFDETRKeypointPreview` (preview model) |
+| Keypoint detection | `RFDETRKeypointPreview` (preview model) |
 
 To use this with CVAT CLI, use the following options:
 
@@ -30,11 +30,6 @@ To use this with CVAT CLI, use the following options:
 where `<architecture>` is one of the RF-DETR class names above, such as `RFDETRSegSmall`.
 The `architecture` parameter is required. By default, RF-DETR automatically downloads and uses
 that architecture's pretrained weights.
-
-RF-DETR checkpoints do not always contain architecture metadata. Some official Roboflow checkpoints,
-including Large, SegLarge, and KeypointPreview, lack the `args` and `model_name` fields needed for
-automatic architecture detection. Requiring `architecture` makes loading explicit for both pretrained
-and custom checkpoints, even when the file is renamed.
 
 This function also supports the following options:
 
@@ -52,22 +47,22 @@ This function also supports the following options:
   By default, `cpu` is used. GPU inference requires compatible CUDA-enabled PyTorch dependencies.
 
 - `-p keypoint_names_path=str:<path>` - path to a file with names of keypoints.
-  Only valid for pose estimation models.
-  By default, the pretrained human-pose model uses the 17 COCO keypoint names
-  (`nose`, `left_eye`, `right_eye`, etc.). Custom keypoint checkpoints require this option
-  and must contain their object class names; the wrapper does not infer a schema from the keypoint count.
+  Only supported for keypoint detection models. Required when using a custom checkpoint.
 
   The `<path>` can point to a text file with one keypoint name per line, in the model's keypoint order.
+  These names will be applied to each class.
 
-  For different schemas per class, use a `.json` file mapping every class name to an ordered list
+  To use different keypoint names per class, provide a `.json` file mapping every class name to an ordered list
   of keypoint names, for example `{"cat": ["nose", "tail"], "car": ["front", "rear", "top"]}`.
-  Names must be nonempty and unique within each class, and counts must match the checkpoint.
-  Classes without keypoints in a mixed detection/keypoint checkpoint are not supported.
 
+  Keypoint names must be nonempty and unique within one class, and counts must match the checkpoint.
+
+Detection models return bounding boxes.
 Segmentation models return masks, or polygons when mask-to-polygon conversion is requested.
-Pose models return skeletons and require matching skeleton labels in CVAT.
-The confidence threshold defaults to `0.5` when none is supplied by CVAT;
-keypoints with confidence below `0.5` are marked outside.
+Keypoint detection models return skeletons and require matching skeleton labels in CVAT.
+
+When no confidence threshold is supplied by CVAT, RF-DETR uses its default.
+keypoints with confidence below threshold specified thre are marked outside.
 
 Use the same architecture, optional checkpoint, and other parameters when registering the function
 and starting the agent.
