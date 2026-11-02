@@ -40,8 +40,7 @@ This function also supports the following options:
   --function-file func.py -p architecture=str:RFDETRSegSmall -p model=str:/path/to/best.pth
   ```
 
-  The checkpoint must match the selected architecture. Saved training configuration is restored
-  from checkpoint metadata when available. Custom checkpoints must provide unique class names.
+  The checkpoint must match the selected architecture. Custom checkpoints must provide unique class names.
 
 - `-p device=str:<device>` - the PyTorch device, such as `cuda` or `cuda:0`, on which to run the model.
   By default, `cpu` is used. GPU inference requires compatible CUDA-enabled PyTorch dependencies.
