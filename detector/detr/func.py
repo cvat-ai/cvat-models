@@ -163,7 +163,7 @@ class DetrSegmentationFunction(DetrFunctionWithSimpleLabel):
                 yield cvataa.polygon(label_id, approx.ravel().tolist())
 
 
-class DetrPoseEstimationFunction(DetrFunction):
+class DetrKeypointDetectionFunction(DetrFunction):
     LABEL_TYPE = "skeleton"
 
     def __init__(
@@ -269,17 +269,17 @@ def create(
 ) -> cvataa.DetectionFunction:
     loaded = _load_model(architecture, model, device=device)
     if loaded.model_config.use_grouppose_keypoints:
-        function_class = DetrPoseEstimationFunction
+        function_class = DetrKeypointDetectionFunction
     elif loaded.model_config.segmentation_head:
         function_class = DetrSegmentationFunction
     else:
         function_class = DetrDetectionFunction
 
     kwargs = {}
-    if function_class is DetrPoseEstimationFunction:
+    if function_class is DetrKeypointDetectionFunction:
         kwargs["pretrained"] = model is None
     if keypoint_names_path is not None:
-        if function_class is not DetrPoseEstimationFunction:
+        if function_class is not DetrKeypointDetectionFunction:
             raise ValueError("keypoint_names_path is only supported for keypoint models")
         kwargs["keypoint_names_path"] = keypoint_names_path
 
