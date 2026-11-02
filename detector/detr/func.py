@@ -70,17 +70,6 @@ class DetrFunction(abc.ABC):
     @abc.abstractmethod
     def _label_spec(self, name: str, id_: int) -> models.PatchedLabelRequest: ...
 
-
-class DetrFunctionWithSimpleLabel(DetrFunction):
-    LABEL_TYPE: ClassVar[str]
-
-    def _label_spec(self, name: str, id_: int) -> models.PatchedLabelRequest:
-        return cvataa.label_spec(name, id_, type=self.LABEL_TYPE)
-
-
-class DetrFunctionWithShapes(DetrFunction):
-    LABEL_TYPE: ClassVar[str]
-
     def detect(
         self, context: cvataa.DetectionFunctionContext, image: Image.Image
     ) -> list[cvataa.DetectionAnnotation]:
@@ -109,7 +98,14 @@ class DetrFunctionWithShapes(DetrFunction):
     ) -> Iterator[cvataa.DetectionAnnotation]: ...
 
 
-class DetrDetectionFunction(DetrFunctionWithSimpleLabel, DetrFunctionWithShapes):
+class DetrFunctionWithSimpleLabel(DetrFunction):
+    LABEL_TYPE: ClassVar[str]
+
+    def _label_spec(self, name: str, id_: int) -> models.PatchedLabelRequest:
+        return cvataa.label_spec(name, id_, type=self.LABEL_TYPE)
+
+
+class DetrDetectionFunction(DetrFunctionWithSimpleLabel):
     LABEL_TYPE = "rectangle"
 
     def _annotations_from_results(
@@ -124,7 +120,7 @@ class DetrDetectionFunction(DetrFunctionWithSimpleLabel, DetrFunctionWithShapes)
                 yield cvataa.rectangle(label_id, box.tolist())
 
 
-class DetrSegmentationFunction(DetrFunctionWithSimpleLabel, DetrFunctionWithShapes):
+class DetrSegmentationFunction(DetrFunctionWithSimpleLabel):
     LABEL_TYPE = "mask"
 
     def _annotations_from_results(
@@ -167,7 +163,7 @@ class DetrSegmentationFunction(DetrFunctionWithSimpleLabel, DetrFunctionWithShap
                 yield cvataa.polygon(label_id, approx.ravel().tolist())
 
 
-class DetrPoseEstimationFunction(DetrFunctionWithShapes):
+class DetrPoseEstimationFunction(DetrFunction):
     LABEL_TYPE = "skeleton"
 
     def __init__(
