@@ -20,18 +20,22 @@ class YoloFunction(abc.ABC):
         self._device = device
 
         self.spec = cvataa.DetectionFunctionSpec(
-            labels=[self._label_spec(name, id) for id, name in self._model.names.items()],
+            labels=[
+                label_spec
+                for id, name in self._model.names.items()
+                for label_spec in self._label_specs(name, id)
+            ],
         )
 
     @abc.abstractmethod
-    def _label_spec(self, name: str, id_: int) -> models.PatchedLabelRequest: ...
+    def _label_specs(self, name: str, id_: int) -> Iterable[models.PatchedLabelRequest]: ...
 
 
 class YoloFunctionWithSimpleLabel(YoloFunction):
     LABEL_TYPE: ClassVar[str]
 
-    def _label_spec(self, name: str, id_: int) -> models.PatchedLabelRequest:
-        return cvataa.label_spec(name, id_, type=self.LABEL_TYPE)
+    def _label_specs(self, name: str, id_: int) -> Iterable[models.PatchedLabelRequest]:
+        return [cvataa.label_spec(name, id_, type=self.LABEL_TYPE)]
 
 
 class YoloClassificationFunction(YoloFunctionWithSimpleLabel):
@@ -126,6 +130,10 @@ DEFAULT_KEYPOINT_NAMES = [
 
 
 class YoloPoseEstimationFunction(YoloFunctionWithShapes):
+    # Offset applied to the class ID to derive the ID of the corresponding "<name>-box" label,
+    # so it doesn't collide with the skeleton label's ID.
+    _BOX_LABEL_ID_OFFSET = 1_000_000
+
     def __init__(self, model: YOLO, *, keypoint_names_path: str | None = None, **kwargs) -> None:
         if keypoint_names_path is None:
             self._keypoint_names = DEFAULT_KEYPOINT_NAMES
@@ -143,29 +151,42 @@ class YoloPoseEstimationFunction(YoloFunctionWithShapes):
                 if stripped_line
             ]
 
-    def _label_spec(self, name: str, id_: int) -> models.PatchedLabelRequest:
-        return cvataa.skeleton_label_spec(
-            name,
-            id_,
-            [
-                cvataa.keypoint_spec(kp_name, kp_id)
-                for kp_id, kp_name in enumerate(self._keypoint_names)
-            ],
-        )
+    def _label_specs(self, name: str, id_: int) -> Iterable[models.PatchedLabelRequest]:
+        return [
+            cvataa.skeleton_label_spec(
+                name,
+                id_,
+                [
+                    cvataa.keypoint_spec(kp_name, kp_id)
+                    for kp_id, kp_name in enumerate(self._keypoint_names)
+                ],
+            ),
+            cvataa.label_spec(f"{name}-box", id_ + self._BOX_LABEL_ID_OFFSET, type="rectangle"),
+        ]
 
     def _annotations_from_results(self, results: Results) -> Iterable[cvataa.DetectionAnnotation]:
-        return (
-            cvataa.skeleton(
-                int(label.item()),
+        for group_id, (label, box, kps, kp_confs) in enumerate(
+            zip(
+                results.boxes.cls,
+                results.boxes.xyxy,
+                results.keypoints.xy,
+                results.keypoints.conf,
+            ),
+            start=1,
+        ):
+            label_id = int(label.item())
+
+            yield cvataa.rectangle(
+                label_id + self._BOX_LABEL_ID_OFFSET, box.tolist(), group=group_id
+            )
+            yield cvataa.skeleton(
+                label_id,
                 [
                     cvataa.keypoint(kp_index, kp.tolist(), outside=kp_conf.item() < 0.5)
                     for kp_index, (kp, kp_conf) in enumerate(zip(kps, kp_confs))
                 ],
+                group=group_id,
             )
-            for label, kps, kp_confs in zip(
-                results.boxes.cls, results.keypoints.xy, results.keypoints.conf
-            )
-        )
 
 
 class YoloSegmentationFunction(YoloFunctionWithSimpleLabel, YoloFunctionWithShapes):
