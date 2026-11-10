@@ -51,6 +51,14 @@ agent:
       task:
         type: str
         value: "object-detection"
+    rfdetr-large:
+      architecture:
+        type: str
+        value: "RFDETRLarge"
+    rfdetr-seg-large:
+      architecture:
+        type: str
+        value: "RFDETRSegLarge"
     custom:
       # use modelParamsOverride to specify custom parameters for your model.
 

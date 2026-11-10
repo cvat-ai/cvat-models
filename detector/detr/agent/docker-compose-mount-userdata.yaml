@@ -1,0 +1,22 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
+services:
+  cvat-function-register:
+    volumes:
+      - userdata:/app/data:ro
+  cvat-agent:
+    volumes:
+      - userdata:/app/data:ro
+  cvat-function-deregister:
+    volumes:
+      - userdata:/app/data:ro
+
+volumes:
+  userdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${USER_DATA_ABSOLUTE_PATH}

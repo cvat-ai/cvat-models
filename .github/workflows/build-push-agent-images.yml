@@ -69,6 +69,30 @@ jobs:
       tag_suffix: _GPU
     secrets: inherit
 
+  rfdetr-cpu:
+    needs: wait-for-python-packages
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: rfdetr_agent
+      dockerfile: detector/detr/agent/Dockerfile
+      platforms: linux/amd64,linux/arm64
+      tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
+    secrets: inherit
+
+  rfdetr-gpu:
+    needs: wait-for-python-packages
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: rfdetr_agent
+      dockerfile: detector/detr/agent/Dockerfile
+      platforms: linux/amd64
+      build_args: USE_GPU=true
+      tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
+      tag_suffix: _GPU
+    secrets: inherit
+
   sam2-cpu:
     needs: wait-for-python-packages
     uses: ./.github/workflows/build-push-agent-images-reusable.yml
