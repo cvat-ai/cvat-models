@@ -6,6 +6,7 @@ path = [
     "detector/transformers/README.md",
     "interactor/sam2/README.md",
     "detector/detr/README.md",
+    "detector/detr/agent/keypoints.txt",
     "tracker/sam2/README.md",
     "agents_deployment/helm/templates/NOTES.txt",
 ]
