@@ -3,9 +3,9 @@
 This is an implementation of a CVAT auto-annotation function that uses models from the YOLO
 family, as implemented in the Ultralytics library.
 
-> WARNING: While the function code is provided under the MIT license, the underlying Ultralytics
-> library has a different licensing model. Make sure to familiarize yourself with the terms at
-> <https://www.ultralytics.com/license> before using this function.
+> WARNING: This YOLO integration is licensed under `AGPL-3.0-or-later`. It depends on the
+> Ultralytics library, which has its own licensing terms. See
+> <https://www.ultralytics.com/license> for information about the Ultralytics license.
 
 This AA function supports all numbered YOLO models implemented by the Ultralytics library,
 starting with YOLOv3. At the time of this writing, the most recent such model was YOLO12;
