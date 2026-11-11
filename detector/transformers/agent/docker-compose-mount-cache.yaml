@@ -13,6 +13,11 @@ services:
       - cache:/home/agent/.cache/huggingface
     environment:
         HF_HUB_OFFLINE: 1
+  cvat-agent-gpu:
+    volumes:
+      - cache:/home/agent/.cache/huggingface
+    environment:
+      HF_HUB_OFFLINE: 1
   cvat-function-deregister:
     volumes:
       - cache:/home/agent/.cache/huggingface

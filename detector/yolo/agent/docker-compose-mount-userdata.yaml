@@ -9,6 +9,9 @@ services:
   cvat-agent:
     volumes:
       - userdata:/app/data:ro
+  cvat-agent-gpu:
+    volumes:
+      - userdata:/app/data:ro
   cvat-function-deregister:
     volumes:
       - userdata:/app/data:ro
