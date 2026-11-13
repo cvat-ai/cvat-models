@@ -32,17 +32,19 @@ jobs:
             if curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --output /dev/null \
                 "https://pypi.org/pypi/cvat-sdk/${cvat_version}/json" && \
               curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --output /dev/null \
-                "https://pypi.org/pypi/cvat-cli/${cvat_version}/json"; then
-              echo "CVAT SDK and CLI ${cvat_version} are available on PyPI"
+                "https://pypi.org/pypi/cvat-cli/${cvat_version}/json" && \
+              curl --fail --silent --show-error --connect-timeout 5 --max-time 10 --output /dev/null \
+                "https://pypi.org/pypi/cvat-mp4-h264/${cvat_version}/json"; then
+              echo "CVAT SDK, CLI and MP4/H.264 reader ${cvat_version} are available on PyPI"
               echo "cvat_version=${cvat_version}" >> "$GITHUB_OUTPUT"
               exit 0
             fi
 
-            echo "CVAT SDK and CLI ${cvat_version} are not available yet (attempt ${attempt}/30)"
+            echo "CVAT SDK, CLI and MP4/H.264 reader ${cvat_version} are not available yet (attempt ${attempt}/30)"
             sleep 20
           done
 
-          echo "::error::CVAT SDK and CLI ${cvat_version} did not become available on PyPI within 10 minutes"
+          echo "::error::CVAT SDK, CLI and MP4/H.264 reader ${cvat_version} did not become available on PyPI within 10 minutes"
           exit 1
 
   yolo-cpu:

@@ -31,7 +31,7 @@ RUN if [ "$USE_GPU" = "true" ] && [ "$TARGETARCH" = "amd64" ]; then \
 ARG CVAT_VERSION
 
 RUN test -n "$CVAT_VERSION" && \
-    pip install --no-cache-dir "cvat-cli==$CVAT_VERSION" "cvat-sdk==$CVAT_VERSION" && \
+    pip install --no-cache-dir "cvat-cli==$CVAT_VERSION" "cvat-sdk[video]==$CVAT_VERSION" && \
     test "$(python -c 'from importlib.metadata import version; print(version("cvat-sdk"))')" = "$CVAT_VERSION" && \
     test "$(python -c 'from importlib.metadata import version; print(version("cvat-cli"))')" = "$CVAT_VERSION"
 
