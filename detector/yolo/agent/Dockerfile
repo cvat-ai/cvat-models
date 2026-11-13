@@ -23,6 +23,8 @@ WORKDIR /app
 
 RUN mkdir /shared && chown agent:agent /shared && chown agent:agent /app
 
+RUN mkdir -p /home/agent/.local/share/cvat-mp4-h264 && chown -R agent:agent /home/agent/.local
+
 COPY --chmod=755 detector/yolo/requirements.txt .
 
 RUN if [ "$USE_GPU" = "true" ] && [ "$TARGETARCH" = "amd64" ]; then \

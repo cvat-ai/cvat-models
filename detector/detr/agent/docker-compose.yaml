@@ -22,6 +22,7 @@ services:
     profiles: [cpu]
     volumes:
       - shared-data:/shared:ro
+      - openh264-data:/home/agent/.local/share/cvat-mp4-h264
     depends_on:
       cvat-function-register:
         condition: service_completed_successfully
@@ -33,6 +34,7 @@ services:
       MODEL_CONFIG_PARAMS:
       ORG_SLUG:
       USE_CUDA: "false"
+      INSTALL_OPENH264:
 
   cvat-agent-gpu:
     extends: cvat-agent
@@ -65,3 +67,4 @@ services:
 
 volumes:
   shared-data:
+  openh264-data:

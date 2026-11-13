@@ -11,6 +11,7 @@ source "$(dirname "$0")/check_env.sh"
 common_env
 resolve_model_params
 resolve_cuda
+resolve_openh264
 
 if [ -f /shared/FUNCTION_ID ]; then
     echo "FUNCTION_ID file found. Reading FUNCTION_ID from /shared/FUNCTION_ID"
