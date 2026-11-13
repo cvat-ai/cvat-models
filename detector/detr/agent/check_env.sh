@@ -40,6 +40,20 @@ resolve_cuda() {
     fi
 }
 
+resolve_openh264() {
+    if [ -n "$CVAT_OPENH264_LIBRARY" ]; then
+        echo "Using the OpenH264 library at $CVAT_OPENH264_LIBRARY."
+    elif [ "$INSTALL_OPENH264" = "true" ]; then
+        echo "INSTALL_OPENH264 is true. Installing the OpenH264 library from Cisco (https://www.openh264.org/BINARY_LICENSE.txt)."
+        if ! cvat-cli openh264 install; then
+            echo "Error: could not install the OpenH264 library. Set INSTALL_OPENH264=false to run the agent without video support."
+            exit 1
+        fi
+    else
+        echo "Info: OpenH264 is not set up, so the agent cannot annotate video tasks. To enable them, set INSTALL_OPENH264=true or mount your own OpenH264 library."
+    fi
+}
+
 resolve_model_params() {
     if [ -z "$MODEL_CONFIG_PARAMS" ]; then
         echo "Warning: MODEL_CONFIG_PARAMS environment variable not found. Default architecture will be used: RFDETRLarge"
