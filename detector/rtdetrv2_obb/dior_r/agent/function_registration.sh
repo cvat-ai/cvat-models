@@ -11,8 +11,8 @@ common_env
 resolve_model_params
 resolve_function_name
 
-FUNCTION_FILE_PATH="rio_detr/dior_r/func.py"
-/app/rio_detr/clone_upstream.sh
+FUNCTION_FILE_PATH="rtdetrv2_obb/dior_r/func.py"
+/app/rtdetrv2_obb/clone_upstream.sh
 USERNAME=$(curl "$CVAT_BASE_URL"/api/users/self -s --fail --oauth2-bearer "$CVAT_ACCESS_TOKEN" | jq -r '.username')
 if [ -z "$USERNAME" ] || [ "$USERNAME" = "null" ]; then
     echo "Error: unable to retrieve the CVAT username."

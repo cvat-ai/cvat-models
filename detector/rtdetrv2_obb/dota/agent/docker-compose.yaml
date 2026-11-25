@@ -8,8 +8,8 @@ services:
     entrypoint: ["/app/function_registration.sh"]
     volumes:
       - shared-data:/shared
-      - model-cache:/app/rio_detr/checkpoints
-      - upstream-cache:/home/agent/.cache/cvat-models/rio-detr
+      - model-cache:/app/rtdetrv2_obb/checkpoints
+      - upstream-cache:/home/agent/.cache/cvat-models/rtdetrv2-obb
     restart: "on-failure"
     environment:
       CVAT_BASE_URL:
@@ -24,8 +24,8 @@ services:
     profiles: [cpu]
     volumes:
       - shared-data:/shared:ro
-      - model-cache:/app/rio_detr/checkpoints:ro
-      - upstream-cache:/home/agent/.cache/cvat-models/rio-detr:ro
+      - model-cache:/app/rtdetrv2_obb/checkpoints:ro
+      - upstream-cache:/home/agent/.cache/cvat-models/rtdetrv2-obb:ro
     depends_on:
       cvat-function-register:
         condition: service_completed_successfully

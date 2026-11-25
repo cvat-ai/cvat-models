@@ -403,7 +403,7 @@ def rotated_box_intersects_image(
     return bool(_clip_polygon_to_image(corners, image_width, image_height))
 
 
-class RioDetrFunction:
+class RTDETRv2OBBFunction:
     def __init__(
         self,
         *,

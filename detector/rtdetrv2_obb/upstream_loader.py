@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 UPSTREAM_COMMIT = "125c132d41946378e4f0e6067f0f8d28ade008fc"
-UPSTREAM_DIR_ENV = "RIO_DETR_UPSTREAM_DIR"
+UPSTREAM_DIR_ENV = "RTDETRV2_OBB_UPSTREAM_DIR"
 
 
 def get_upstream_dir() -> Path:
@@ -30,7 +30,7 @@ def verify_upstream_checkout(path: Path) -> Path:
     path = path.expanduser().resolve()
     if not (path / "engine" / "core" / "workspace.py").is_file():
         raise RuntimeError(
-            f"RiO-DETR is not cloned at {path}. Follow the git clone step in detector/rio_detr/README.md."
+            f"RiO-DETR is not cloned at {path}. Follow the git clone step in detector/rtdetrv2_obb/README.md."
         )
     try:
         revision = subprocess.run(
@@ -88,7 +88,7 @@ def load_upstream_runtime(root: Path) -> UpstreamRuntime:
     if runtime := _RUNTIMES.get(root):
         return runtime
 
-    namespace = f"_cvat_rio_detr_{abs(hash(root))}"
+    namespace = f"_cvat_rtdetrv2_obb_{abs(hash(root))}"
     engine_root = root / "engine"
     _package(namespace, engine_root)
 

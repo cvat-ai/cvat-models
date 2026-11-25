@@ -4,5 +4,5 @@
 
 .git
 **/__pycache__
-detector/rio_detr/checkpoints/**/*.pth
-detector/rio_detr/checkpoints/**/*.tmp
+detector/rtdetrv2_obb/checkpoints/**/*.pth
+detector/rtdetrv2_obb/checkpoints/**/*.tmp

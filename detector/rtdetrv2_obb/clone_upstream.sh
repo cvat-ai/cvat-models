@@ -8,7 +8,7 @@ set -e
 
 UPSTREAM_REPOSITORY="https://github.com/RicePasteM/RiO-DETR.git"
 UPSTREAM_COMMIT="125c132d41946378e4f0e6067f0f8d28ade008fc"
-UPSTREAM_DIR="${RIO_DETR_UPSTREAM_DIR:-$(dirname "$0")/RiO-DETR}"
+UPSTREAM_DIR="${RTDETRV2_OBB_UPSTREAM_DIR:-$(dirname "$0")/RiO-DETR}"
 
 if [ ! -d "$UPSTREAM_DIR/.git" ]; then
     git clone "$UPSTREAM_REPOSITORY" "$UPSTREAM_DIR"

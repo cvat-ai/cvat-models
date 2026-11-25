@@ -19,6 +19,6 @@ if [ -z "$FUNCTION_ID" ]; then
     exit 1
 fi
 
-/app/rio_detr/clone_upstream.sh
+/app/rtdetrv2_obb/clone_upstream.sh
 exec cvat-cli --server-host "$CVAT_BASE_URL" "${ORG_SLUG_ARGS[@]}" function run-agent \
-    "$FUNCTION_ID" --function-file="rio_detr/dota/func.py" $MODEL_CONFIG_PARAMS "${USE_CUDA_ARGS[@]}"
+    "$FUNCTION_ID" --function-file="rtdetrv2_obb/dota/func.py" $MODEL_CONFIG_PARAMS "${USE_CUDA_ARGS[@]}"

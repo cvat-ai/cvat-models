@@ -8,10 +8,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import cvat_sdk.auto_annotation as cvataa
-from rio_detr.common import (DEFAULT_CONF_THRESHOLD, DEFAULT_MODEL_SIZE,
-                             GROUP_DOTA_MULTI_SCALE, GROUP_DOTA_SINGLE_SCALE,
-                             RioDetrFunction)
-from rio_detr.dota.dota_classes import DOTA_CLASSES
+from rtdetrv2_obb.common import (
+    DEFAULT_CONF_THRESHOLD,
+    DEFAULT_MODEL_SIZE,
+    GROUP_DOTA_MULTI_SCALE,
+    GROUP_DOTA_SINGLE_SCALE,
+    RTDETRv2OBBFunction,
+)
+from rtdetrv2_obb.dota.dota_classes import DOTA_CLASSES
 
 
 def create(
@@ -26,7 +30,7 @@ def create(
         raise ValueError(
             "DOTA checkpoint_group must be 'dota-single-scale' or 'dota-multi-scale'"
         )
-    return RioDetrFunction(
+    return RTDETRv2OBBFunction(
         class_names=DOTA_CLASSES,
         checkpoint_group=checkpoint_group,
         model_size=model_size,

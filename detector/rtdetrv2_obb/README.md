@@ -3,7 +3,7 @@ Copyright (C) CVAT.ai Corporation
 SPDX-License-Identifier: MIT
 -->
 
-# RT-DETRv2-OBB (RiO-DETR public baseline)
+# RT-DETRv2-OBB
 
 This directory provides CVAT auto-annotation functions for the public RT-DETRv2 oriented-box
 baseline from [RicePasteM/RiO-DETR][]. The public repository does not contain the complete
@@ -40,10 +40,10 @@ Clone the upstream repository at the supported revision:
 ```
 
 The generated `RiO-DETR/` directory is ignored by Git. To use an existing checkout at the exact
-supported commit instead, set `RIO_DETR_UPSTREAM_DIR` before running the script:
+supported commit instead, set `RTDETRV2_OBB_UPSTREAM_DIR` before running the script:
 
 ```shell
-export RIO_DETR_UPSTREAM_DIR=/absolute/path/to/RiO-DETR
+export RTDETRV2_OBB_UPSTREAM_DIR=/absolute/path/to/RiO-DETR
 ./clone_upstream.sh
 ```
 
