@@ -6,16 +6,12 @@ SPDX-License-Identifier: MIT
 # RT-DETRv2-OBB
 
 This directory provides CVAT auto-annotation functions for the public RT-DETRv2 oriented-box
-baseline from [RicePasteM/RiO-DETR][]. The public repository does not contain the complete
-paper-specific RiO-DETR architecture. This integration intentionally does not use RiO-DETRv2.
+baseline from [RicePasteM/RiO-DETR](https://github.com/RicePasteM/RiO-DETR).
 
 The CVAT adapter and deployment files are distributed under CVAT's MIT license. The separately
-cloned upstream source and official [RT-DETR-OBB checkpoints][] remain under the Apache License 2.0.
-The prepared upstream checkout contains its license and attribution details. The upstream source is
-not copied into this repository.
-
-[RicePasteM/RiO-DETR]: https://github.com/RicePasteM/RiO-DETR
-[RT-DETR-OBB checkpoints]: https://huggingface.co/RicePasteM/RT-DETR-OBB
+cloned upstream source and official
+[RT-DETR-OBB checkpoints](https://huggingface.co/RicePasteM/RT-DETR-OBB) remain under the Apache
+License 2.0. The upstream source is not copied into this repository.
 
 ## Supported checkpoints
 
@@ -25,12 +21,11 @@ not copied into this repository.
 | DOTA-v1.0 multi-scale | M, X | 1024 × 1024 |
 | DIOR-R | N, S, M, L, X | 800 × 800 |
 
-DOTA X single-scale is the default DOTA model. DIOR-R X is the default DIOR-R model. FAIR1M is
-not supported because the referenced model zoo does not publish an official FAIR1M checkpoint.
+DOTA X single-scale is the default DOTA model. DIOR-R X is the default DIOR-R model.
 
 ## Preparation
 
-Git is required. Before using either function locally, run the preparation commands from the
+Git is required. Before using the function locally, run the preparation commands from the
 directory containing this README.
 
 Clone the upstream repository at the supported revision:
@@ -47,8 +42,6 @@ export RTDETRV2_OBB_UPSTREAM_DIR=/absolute/path/to/RiO-DETR
 ./clone_upstream.sh
 ```
 
-The integration verifies the checkout revision before loading the model.
-
 Download and verify all 12 official checkpoints:
 
 ```shell
@@ -62,9 +55,7 @@ python common.py --group dota-single-scale --model-size X
 python common.py --group dior-r
 ```
 
-Downloads use public `resolve/main` URLs and require no Hugging Face token. Existing files are
-reused only after their size and SHA-256 match the official repository metadata. Files are written
-to a temporary sibling and atomically installed after verification.
+Downloads use public URLs and require no Hugging Face token.
 
 Agent registration performs both preparation steps automatically and reuses the cached source and
 checkpoint files.
@@ -101,7 +92,7 @@ Supported parameters are:
 - `conf_threshold`: fallback confidence threshold, defaulting to `0.4`. A threshold supplied by a
   CVAT annotation request takes precedence.
 
-Use the same parameters when registering the function and starting its agent. See the
+Use these parameters when registering the function. See the
 [native-functions guide](https://docs.cvat.ai/docs/annotation/auto-annotation/ai-models/#native-functions)
 for dependency installation, authentication, and direct CLI registration. See the
 [Docker Compose agent guide](https://docs.cvat.ai/docs/guides/compose-agents-userguide/)
