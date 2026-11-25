@@ -1,0 +1,9 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
+cvat-sdk>=2.44
+Pillow
+PyYAML
+torch
+torchvision

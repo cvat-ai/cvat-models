@@ -1,0 +1,8 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
+.git
+**/__pycache__
+detector/rio_detr/checkpoints/**/*.pth
+detector/rio_detr/checkpoints/**/*.tmp
