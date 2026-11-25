@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import cvat_sdk.auto_annotation as cvataa
+from rtdetrv2_obb.classes import DIOR_R_CLASSES, DOTA_CLASSES
 from rtdetrv2_obb.common import (
     DEFAULT_CONF_THRESHOLD,
     DEFAULT_MODEL_SIZE,
@@ -16,8 +17,6 @@ from rtdetrv2_obb.common import (
     GROUP_DOTA_SINGLE_SCALE,
     RTDETRv2OBBFunction,
 )
-from rtdetrv2_obb.dior_r.dior_r_classes import DIOR_R_CLASSES
-from rtdetrv2_obb.dota.dota_classes import DOTA_CLASSES
 
 
 def create(

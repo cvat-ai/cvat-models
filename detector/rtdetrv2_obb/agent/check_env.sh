@@ -38,19 +38,16 @@ resolve_visibility() {
 }
 
 resolve_model_params() {
-    if [[ "$MODEL_CONFIG_PARAMS" =~ (^|[[:space:]])-p[[:space:]]+dataset=str:(dota|dior-r)($|[[:space:]]) ]]; then
-        DATASET="${BASH_REMATCH[2]}"
-    else
+    if ! [[ "$MODEL_CONFIG_PARAMS" =~ (^|[[:space:]])-p[[:space:]]+dataset=str:(dota|dior-r)($|[[:space:]]) ]]; then
         echo "Error: MODEL_CONFIG_PARAMS must include '-p dataset=str:dota' or '-p dataset=str:dior-r'."
         exit 1
     fi
 }
 
 resolve_function_name() {
-    if [ "$DATASET" = "dota" ]; then
-        FUNCTION_NAME="${FUNCTION_NAME:-OBB Object Detection - DOTA}"
-    else
-        FUNCTION_NAME="${FUNCTION_NAME:-OBB Object Detection - DIOR-R}"
+    if [ -z "$FUNCTION_NAME" ]; then
+        echo "Error: FUNCTION_NAME must be set."
+        exit 1
     fi
 }
 
