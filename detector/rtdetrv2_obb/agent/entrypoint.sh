@@ -21,4 +21,4 @@ fi
 
 /app/rtdetrv2_obb/clone_upstream.sh
 exec cvat-cli --server-host "$CVAT_BASE_URL" "${ORG_SLUG_ARGS[@]}" function run-agent \
-    "$FUNCTION_ID" --function-file="rtdetrv2_obb/dior_r/func.py" $MODEL_CONFIG_PARAMS "${USE_CUDA_ARGS[@]}"
+    "$FUNCTION_ID" --function-file="$FUNCTION_FILE_PATH" $MODEL_CONFIG_PARAMS "${USE_CUDA_ARGS[@]}"

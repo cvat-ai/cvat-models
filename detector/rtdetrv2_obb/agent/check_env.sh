@@ -6,6 +6,8 @@
 
 set -e
 
+FUNCTION_FILE_PATH="rtdetrv2_obb/func.py"
+
 validate_access_token() {
     if [ -z "$CVAT_ACCESS_TOKEN" ]; then
         echo "Error: CVAT_ACCESS_TOKEN must be set."
@@ -36,13 +38,20 @@ resolve_visibility() {
 }
 
 resolve_model_params() {
-    if [ -z "$MODEL_CONFIG_PARAMS" ]; then
-        MODEL_CONFIG_PARAMS="-p checkpoint_group=str:dota-single-scale -p model_size=str:X -p conf_threshold=float:0.4"
+    if [[ "$MODEL_CONFIG_PARAMS" =~ (^|[[:space:]])-p[[:space:]]+dataset=str:(dota|dior-r)($|[[:space:]]) ]]; then
+        DATASET="${BASH_REMATCH[2]}"
+    else
+        echo "Error: MODEL_CONFIG_PARAMS must include '-p dataset=str:dota' or '-p dataset=str:dior-r'."
+        exit 1
     fi
 }
 
 resolve_function_name() {
-    FUNCTION_NAME="${FUNCTION_NAME:-OBB Object Detection - DOTA}"
+    if [ "$DATASET" = "dota" ]; then
+        FUNCTION_NAME="${FUNCTION_NAME:-OBB Object Detection - DOTA}"
+    else
+        FUNCTION_NAME="${FUNCTION_NAME:-OBB Object Detection - DIOR-R}"
+    fi
 }
 
 resolve_cuda() {

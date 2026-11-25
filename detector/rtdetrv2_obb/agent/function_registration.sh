@@ -11,7 +11,6 @@ common_env
 resolve_model_params
 resolve_function_name
 
-FUNCTION_FILE_PATH="rtdetrv2_obb/dota/func.py"
 /app/rtdetrv2_obb/clone_upstream.sh
 USERNAME=$(curl "$CVAT_BASE_URL"/api/users/self -s --fail --oauth2-bearer "$CVAT_ACCESS_TOKEN" | jq -r '.username')
 if [ -z "$USERNAME" ] || [ "$USERNAME" = "null" ]; then

@@ -42,15 +42,18 @@ RUN test -n "$CVAT_VERSION" && \
     test "$(python -c 'from importlib.metadata import version; print(version("cvat-cli"))')" = "$CVAT_VERSION"
 
 COPY --chmod=644 detector/rtdetrv2_obb/__init__.py detector/rtdetrv2_obb/common.py \
+    detector/rtdetrv2_obb/func.py \
     detector/rtdetrv2_obb/upstream_loader.py /app/rtdetrv2_obb/
 COPY --chmod=755 detector/rtdetrv2_obb/clone_upstream.sh /app/rtdetrv2_obb/
-RUN mkdir -p /app/rtdetrv2_obb/dota
-COPY --chmod=644 detector/rtdetrv2_obb/dota/__init__.py detector/rtdetrv2_obb/dota/func.py \
+RUN mkdir -p /app/rtdetrv2_obb/dota /app/rtdetrv2_obb/dior_r
+COPY --chmod=644 detector/rtdetrv2_obb/dota/__init__.py \
     detector/rtdetrv2_obb/dota/dota_classes.py /app/rtdetrv2_obb/dota/
-COPY --chmod=755 detector/rtdetrv2_obb/dota/agent/function_registration.sh /app/
-COPY --chmod=755 detector/rtdetrv2_obb/dota/agent/function_deregistration.sh /app/
-COPY --chmod=755 detector/rtdetrv2_obb/dota/agent/check_env.sh /app/
-COPY --chmod=755 detector/rtdetrv2_obb/dota/agent/entrypoint.sh /app/
+COPY --chmod=644 detector/rtdetrv2_obb/dior_r/__init__.py \
+    detector/rtdetrv2_obb/dior_r/dior_r_classes.py /app/rtdetrv2_obb/dior_r/
+COPY --chmod=755 detector/rtdetrv2_obb/agent/function_registration.sh /app/
+COPY --chmod=755 detector/rtdetrv2_obb/agent/function_deregistration.sh /app/
+COPY --chmod=755 detector/rtdetrv2_obb/agent/check_env.sh /app/
+COPY --chmod=755 detector/rtdetrv2_obb/agent/entrypoint.sh /app/
 
 # v1.34.6 includes the fix for CVE-2025-68121.
 ADD --chmod=+x https://dl.k8s.io/release/v1.34.6/bin/linux/${TARGETARCH}/kubectl /usr/local/bin/

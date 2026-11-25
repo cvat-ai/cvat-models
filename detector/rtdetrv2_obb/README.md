@@ -19,11 +19,11 @@ not copied into this repository.
 
 ## Supported checkpoints
 
-| Model variant | Sizes | Input size | CVAT wrapper |
-| --- | --- | --- | --- |
-| DOTA-v1.0 single-scale | N, S, M, L, X | 1024 × 1024 | `dota/func.py` |
-| DOTA-v1.0 multi-scale | M, X | 1024 × 1024 | `dota/func.py` |
-| DIOR-R | N, S, M, L, X | 800 × 800 | `dior_r/func.py` |
+| Model variant | Sizes | Input size |
+| --- | --- | --- |
+| DOTA-v1.0 single-scale | N, S, M, L, X | 1024 × 1024 |
+| DOTA-v1.0 multi-scale | M, X | 1024 × 1024 |
+| DIOR-R | N, S, M, L, X | 800 × 800 |
 
 DOTA X single-scale is the default DOTA model. DIOR-R X is the default DIOR-R model. FAIR1M is
 not supported because the referenced model zoo does not publish an official FAIR1M checkpoint.
@@ -71,28 +71,29 @@ checkpoint files.
 
 ## Use with CVAT CLI
 
-From the `dota` directory, use the following options for the DOTA function:
+From the directory containing this README, use the following options for DOTA:
 
 ```text
 --function-file func.py \
-    -p checkpoint_group=str:dota-single-scale \
+    -p dataset=str:dota \
     -p model_size=str:X \
     -p conf_threshold=float:0.4
 ```
 
-From the `dior_r` directory, use the following options for the DIOR-R function:
+For DIOR-R, change the required dataset parameter:
 
 ```text
 --function-file func.py \
-    -p checkpoint_group=str:dior-r \
+    -p dataset=str:dior-r \
     -p model_size=str:M \
     -p conf_threshold=float:0.4
 ```
 
 Supported parameters are:
 
-- `checkpoint_group`: model variant to use: `dota-single-scale`, `dota-multi-scale`, or `dior-r`,
-  as accepted by the selected dataset wrapper.
+- `dataset`: required dataset and class mapping: `dota` or `dior-r`.
+- `checkpoint_group`: optional model variant. DOTA accepts `dota-single-scale` (the default) or
+  `dota-multi-scale`; DIOR-R uses `dior-r`.
 - `model_size`: `N`, `S`, `M`, `L`, or `X`; DOTA multi-scale accepts only `M` and `X`.
 - `checkpoint`: optional local checkpoint path. The group and model size still select the matching
   architecture configuration.
@@ -104,7 +105,8 @@ Use the same parameters when registering the function and starting its agent. Se
 [native-functions guide](https://docs.cvat.ai/docs/annotation/auto-annotation/ai-models/#native-functions)
 for dependency installation, authentication, and direct CLI registration. See the
 [Docker Compose agent guide](https://docs.cvat.ai/docs/guides/compose-agents-userguide/)
-for image building and agent deployment instructions; choose the DOTA or DIOR-R agent directory.
+for image building and agent deployment instructions. The `agent` image supports both
+datasets; include `-p dataset=str:dota` or `-p dataset=str:dior-r` in `MODEL_CONFIG_PARAMS`.
 
 ## Output behavior and limitations
 
