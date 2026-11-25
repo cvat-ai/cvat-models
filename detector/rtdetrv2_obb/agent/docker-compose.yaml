@@ -9,7 +9,6 @@ services:
     volumes:
       - shared-data:/shared
       - model-cache:/app/rtdetrv2_obb/checkpoints
-      - upstream-cache:/home/agent/.cache/cvat-models/rtdetrv2-obb
     restart: "on-failure"
     environment:
       CVAT_BASE_URL:
@@ -25,7 +24,6 @@ services:
     volumes:
       - shared-data:/shared:ro
       - model-cache:/app/rtdetrv2_obb/checkpoints:ro
-      - upstream-cache:/home/agent/.cache/cvat-models/rtdetrv2-obb:ro
     depends_on:
       cvat-function-register:
         condition: service_completed_successfully
@@ -66,4 +64,3 @@ services:
 volumes:
   shared-data:
   model-cache:
-  upstream-cache:

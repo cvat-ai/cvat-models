@@ -20,9 +20,13 @@ WORKDIR /app
 
 RUN mkdir -p /shared /app/rtdetrv2_obb/checkpoints/dior-r \
         /app/rtdetrv2_obb/checkpoints/dota-single-scale \
-        /app/rtdetrv2_obb/checkpoints/dota-multi-scale \
-        /home/agent/.cache/cvat-models/rtdetrv2-obb && \
+        /app/rtdetrv2_obb/checkpoints/dota-multi-scale && \
     chown -R agent:agent /shared /app /home/agent/.cache
+
+COPY --chmod=755 detector/rtdetrv2_obb/clone_upstream.sh /app/rtdetrv2_obb/
+
+RUN /app/rtdetrv2_obb/clone_upstream.sh && \
+    chown -R agent:agent /app/rtdetrv2_obb/RiO-DETR
 
 COPY --chmod=644 detector/rtdetrv2_obb/requirements.txt /app/rtdetrv2_obb/requirements.txt
 
@@ -44,7 +48,6 @@ RUN test -n "$CVAT_VERSION" && \
 COPY --chmod=644 detector/rtdetrv2_obb/__init__.py detector/rtdetrv2_obb/common.py \
     detector/rtdetrv2_obb/classes.py detector/rtdetrv2_obb/func.py \
     detector/rtdetrv2_obb/upstream_loader.py /app/rtdetrv2_obb/
-COPY --chmod=755 detector/rtdetrv2_obb/clone_upstream.sh /app/rtdetrv2_obb/
 COPY --chmod=755 detector/rtdetrv2_obb/agent/function_registration.sh /app/
 COPY --chmod=755 detector/rtdetrv2_obb/agent/function_deregistration.sh /app/
 COPY --chmod=755 detector/rtdetrv2_obb/agent/check_env.sh /app/
@@ -54,7 +57,5 @@ COPY --chmod=755 detector/rtdetrv2_obb/agent/entrypoint.sh /app/
 ADD --chmod=+x https://dl.k8s.io/release/v1.34.6/bin/linux/${TARGETARCH}/kubectl /usr/local/bin/
 
 USER agent
-
-ENV RTDETRV2_OBB_UPSTREAM_DIR=/home/agent/.cache/cvat-models/rtdetrv2-obb/RiO-DETR
 
 ENTRYPOINT ["./entrypoint.sh"]

@@ -23,22 +23,11 @@ License 2.0. The upstream source is not copied into this repository.
 
 DOTA X single-scale is the default DOTA model. DIOR-R X is the default DIOR-R model.
 
-## Preparation
+## Local preparation
 
-Git is required. Before using the function locally, run the preparation commands from the
-directory containing this README.
-
-Clone the upstream repository at the supported revision:
+To use the function directly, clone the upstream repository at the target revision:
 
 ```shell
-./clone_upstream.sh
-```
-
-The generated `RiO-DETR/` directory is ignored by Git. To use an existing checkout at the exact
-supported commit instead, set `RTDETRV2_OBB_UPSTREAM_DIR` before running the script:
-
-```shell
-export RTDETRV2_OBB_UPSTREAM_DIR=/absolute/path/to/RiO-DETR
 ./clone_upstream.sh
 ```
 
@@ -57,8 +46,8 @@ python common.py --group dior-r
 
 Downloads use public URLs and require no Hugging Face token.
 
-Agent registration performs both preparation steps automatically and reuses the cached source and
-checkpoint files.
+The agent image includes the pinned upstream source. Agent registration downloads the selected
+checkpoint and reuses it from the checkpoint cache.
 
 ## Use with CVAT CLI
 
