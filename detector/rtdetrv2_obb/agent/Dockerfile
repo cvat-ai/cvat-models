@@ -21,7 +21,7 @@ WORKDIR /app
 RUN mkdir -p /shared /app/rtdetrv2_obb/checkpoints/dior-r \
         /app/rtdetrv2_obb/checkpoints/dota-single-scale \
         /app/rtdetrv2_obb/checkpoints/dota-multi-scale && \
-    chown -R agent:agent /shared /app /home/agent/.cache
+    chown -R agent:agent /shared /app
 
 COPY --chmod=755 detector/rtdetrv2_obb/clone_upstream.sh /app/rtdetrv2_obb/
 
