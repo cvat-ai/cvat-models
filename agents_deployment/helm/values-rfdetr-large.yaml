@@ -1,0 +1,65 @@
+# Copyright (C) CVAT.ai Corporation
+#
+# SPDX-License-Identifier: MIT
+
+# Keep this unique for every agent installed in the same namespace.
+# This value is used for the Deployment, hook Jobs, RBAC objects, and ConfigMap.
+fullnameOverride: "rfdetr-large"
+
+# GPU images use the _GPU tag suffix and are published for linux/amd64.
+image:
+  repository: "cvat/rfdetr_agent"
+  tag: "v2.84.0_GPU"
+  pullPolicy: IfNotPresent
+
+agent:
+  # Function names must be unique for a user within the selected CVAT organization.
+  function_name: "Object Detection — COCO"
+  replicaCount: 1
+
+  # Leave empty to register the function for the token owner without an organization.
+  org_slug: ""
+  cvat_base_url: "https://app.cvat.ai"
+  function_visibility: "public"
+
+  # The GPU image and CUDA-enabled runtime are required when this is true.
+  use_cuda: true
+
+  # This preset passes: -p architecture=str:RFDETRLarge
+  preset: rfdetr-large
+
+  resources:
+    limits:
+      cpu: 1
+      memory: 3Gi
+      # On the target node, one scheduled GPU unit represents 1 GiB of VRAM.
+      gpu: 2
+    requests:
+      cpu: 500m
+      memory: 2Gi
+      gpu: 2
+
+  # The target node group is selected by this stable, purpose-specific label.
+  nodeSelector:
+    purpose: serverless-functions-gpu
+
+  # The target node currently has no taints, so no toleration is required.
+  tolerations: []
+
+  # The Secret already exists in the deployment namespace and contains the `token` key.
+  secret_env:
+    - name: CVAT_ACCESS_TOKEN
+      secretName: cvat-agent
+      secretKey: token
+
+# Unlike the agent Deployment, registration initializes the function on CPU and
+# does not request a GPU resource. Give it enough memory for model construction.
+job:
+  resources:
+    limits:
+      cpu: 1
+      memory: 3Gi
+    requests:
+      cpu: 500m
+      memory: 2Gi
+  activeDeadlineSeconds: 300
