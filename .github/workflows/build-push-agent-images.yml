@@ -140,3 +140,27 @@ jobs:
       cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
       tag_suffix: _GPU
     secrets: inherit
+
+  rtdetrv2-obb-cpu:
+    needs: wait-for-python-packages
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: rtdetrv2_obb_agent
+      dockerfile: detector/rtdetrv2_obb/agent/Dockerfile
+      platforms: linux/amd64,linux/arm64
+      tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
+    secrets: inherit
+
+  rtdetrv2-obb-gpu:
+    needs: wait-for-python-packages
+    uses: ./.github/workflows/build-push-agent-images-reusable.yml
+    with:
+      repo_name: rtdetrv2_obb_agent
+      dockerfile: detector/rtdetrv2_obb/agent/Dockerfile
+      platforms: linux/amd64
+      build_args: USE_GPU=true
+      tag: ${{ github.event.client_payload.tag_name }}
+      cvat_version: ${{ needs.wait-for-python-packages.outputs.cvat_version }}
+      tag_suffix: _GPU
+    secrets: inherit
